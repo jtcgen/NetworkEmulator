@@ -7,3 +7,16 @@
 //
 
 #include "Bridge.hpp"
+
+
+Bridge::Bridge(short port) : Server(port) {
+    
+}
+
+Bridge::~Bridge() {
+    
+}
+
+void Bridge::start() {
+    
+}

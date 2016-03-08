@@ -11,4 +11,18 @@
 
 #include <stdio.h>
 
+#include "Server.hpp"
+
+
+class Bridge: public Server {
+public:
+    Bridge(short port);
+    ~Bridge();
+    
+    void start();
+    
+private:
+    
+};
+
 #endif /* Bridge_hpp */

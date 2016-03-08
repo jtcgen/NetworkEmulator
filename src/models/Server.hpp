@@ -17,7 +17,7 @@
 class Server {
 public:
     Server(short port);
-    virtual ~Server();
+    virtual ~Server() {}
     virtual void start() = 0;
     
 protected:
