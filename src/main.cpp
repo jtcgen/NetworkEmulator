@@ -7,8 +7,8 @@
 //
 
 #include <iostream>
-#include "w_socket.h"
-#include "utility.h"
+#include "w_socket.hpp"
+#include "utility.hpp"
 
 int main(int argc, const char * argv[]) {
     // insert code here...

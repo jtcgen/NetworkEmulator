@@ -3,7 +3,7 @@
 #define _W_SOCKET_H
 
 #include <sys/socket.h>
-#include "utility.h"
+#include "utility.hpp"
 
 class WSocket {
     static int socket(int domain, int type, int protocol);
