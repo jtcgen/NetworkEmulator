@@ -120,13 +120,24 @@ int my_select(int nfds, fd_set *rfds, fd_set *wfds,
     @param name Host name
     @return host structure
 */
-struct hostent* gethostbyname(char *name) {
+struct hostent* my_gethostbyname(char *name) {
     struct hostent *server = gethostbyname(name);
     
     if (server == 0)
         my_error("Error: no such host");
     
     return server;
+}
+
+/**
+ gethostname wrapper
+ 
+ @param name cString to contain name of host
+ @param len Max len of cString
+ */
+void my_gethostname(char *name, size_t len) {
+    if (gethostname(name, len) == -1)
+        my_error("Error: Could not get host name.");
 }
 
 /**
