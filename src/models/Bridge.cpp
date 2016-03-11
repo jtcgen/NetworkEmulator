@@ -18,9 +18,8 @@
     @param num_ports Max number of ports that bridge can handle
     @param debug_on Flag to set debug settings
 */
-Bridge::Bridge(char *lan_name, int num_ports, bool debug_on) : NUM_PORTS_(num_ports),
-                                                               lan_name_(lan_name),
-                                                               debug("Bridge", debug_on) {
+Bridge::Bridge(char *lan_name, int num_ports, bool debug_on) :
+    NUM_PORTS_(num_ports), curr_ports_(0), lan_name_(lan_name), debug("Bridge", debug_on) {
     
     // Setup Bridge information
     setup_server_info();
@@ -59,7 +58,7 @@ void Bridge::create_symlink() {
  
     @param none
     @return none
-*/
+ */
 void Bridge::setup_server_info() {
     addr_ = new AddrData;
     // Configure server information
@@ -106,85 +105,131 @@ void Bridge::setup_socket() {
 }
 
 /**
+    Client disconnected, removes infor from client vector.
+ 
+    @param cli ClientData object.
+    @param index Location in vector.
+    @param all_set
+    @return none
+ */
+void Bridge::remove_client(ClientData cli, int index, fd_set &all_set) {
+    close(cli.fd_);
+    FD_CLR(cli.fd_, &all_set);
+    clients_.erase(clients_.begin()+index);
+    --curr_ports_;
+}
+
+/**
+    Collects requested client address information.
+ 
+    @param cli_fd Client File descriptor.
+    @param cli_addr Client address information.
+    @param msg Packet frame sent from client.   TODO: ADD parameters
+    @return ClientData
+ */
+ClientData Bridge::package_client_data(int cli_fd, struct sockaddr_in cli_addr) {
+    char type = 's';              // Station or Router
+    struct addrinfo *res=0;
+    char host[100];
+    
+    // Gets client host name
+    getaddrinfo(inet_ntoa(cli_addr.sin_addr),0,0,&res);
+    getnameinfo(res->ai_addr,res->ai_addrlen,host,100,0,0,0);
+    
+    // TODO: Parse message and retrieve sender device type.
+    
+    return ClientData(type, cli_fd, host, ntohs(cli_addr.sin_port));
+}
+/**
     Initiates bridge. Listens for open/close requests from stations and
     routers, and regular data packets.
  
     @param none
     @return none
-*/
+ */
 void Bridge::start() {
     const int MAX_LINE = 100;
     char msg[MAX_LINE];
-    int msg_size;
+    size_t msg_size;
+    bool stop = false;
     fd_set all_set, read_set;
-    struct sockaddr_in client_addr;
-    unsigned int client_size = sizeof(client_addr);
+    struct sockaddr_in cli_addr;
+    unsigned int client_size = sizeof(cli_addr);
     int max_fd = listen_fd_;
     
     FD_ZERO(&all_set);
+    FD_SET(STDIN_FILENO, &all_set);
     FD_SET(listen_fd_, &all_set);
     
     if (debug.get_on()) {
         std::ostringstream out;
-        out << "admin: started server on '" << addr_->info_->h_name
+        out << lan_name_ << ": started server on '" << addr_->info_->h_name
             << "'' at '" << addr_->port_ << "'" << std::endl;
         debug.print(out.str());
     }
     
-    while(1) {
+    while(1 && !stop) {
         // Block until input is receieved
         read_set = all_set;
+        
+        // Monitor multiple TCP sockets
         my_select(max_fd + 1, &read_set, NULL, NULL, NULL);
         
         if (FD_ISSET(listen_fd_, &read_set)) {
             for (unsigned int i = 0; i < FD_SETSIZE; ++i) {
-                // New Client requesting connection
+                // New client (station/router) requesting connection
                 if (i == listen_fd_) {
-                    int client_fd = WSocket::accept(listen_fd_, (struct sockaddr *)&client_addr,
+                    int cli_fd = WSocket::accept(listen_fd_, (struct sockaddr *)&cli_addr,
                                               &client_size);
                     
-                    // Get client host name
-                    struct addrinfo *res=0;
-                    char host[100];
-                    getaddrinfo(inet_ntoa(client_addr.sin_addr),0,0,&res);
-                    getnameinfo(res->ai_addr,res->ai_addrlen,host,100,0,0,0);
-                    
-                    
-                    clients_.push_back(ClientData(client_fd, host, ntohs(client_addr.sin_port)));
+                    clients_.push_back(package_client_data(cli_fd, cli_addr));
                     
                     // Update file descriptor set
-                    FD_SET(client_fd, &all_set);
+                    FD_SET(cli_fd, &all_set);
                     
-                    if (client_fd > max_fd)
-                        max_fd = client_fd;
+                    if (cli_fd > max_fd)
+                        max_fd = cli_fd;
                     
-                    std::cout << "admin: connect from '" << host
-                    << "' at '" << ntohs(client_addr.sin_port) << "'\n";
+                    
+                    std::cout << lan_name_ << ": connect from '" << clients_.back().host_
+                    << "' at '" << ntohs(cli_addr.sin_port) << "'\n";
+                    
+                    
+                    ++curr_ports_;
+                    
+                    // If num_ports is at capacity, send Reject msg to client and close conn.
+                    if (curr_ports_ > NUM_PORTS_) {
+                        my_write(clients_.back().fd_, "Rejected", sizeof("Rejected"));
+                        remove_client(clients_.back(), (int)(clients_.size() - 1), all_set);
+                    } else {
+                        my_write(clients_.back().fd_, "Accepted", sizeof("Accepted"));
+                    }
                 }
             }
         } else {
-            // Check clients for data
-            for (unsigned int i = 0; i < clients_.size(); ++i) {
-                if (FD_ISSET(clients_[i].fd_, &read_set)) {
-                    if ((msg_size = my_read(clients_[i].fd_, msg, MAX_LINE)) > 0) {
-                        // Output to server console
-                        std::cout << clients_[i].host_ << "(" <<ntohs(clients_[i].port_)
-                        << "): " << msg << std::endl;
-                        for (unsigned int j = 0; j < clients_.size(); ++j) {
-                            if (i != j) {
-                                my_write(clients_[j].fd_, msg, sizeof(msg));
+            if (FD_ISSET(STDIN_FILENO, &read_set)) {
+                stop = true;
+            } else {
+                // Incoming data frame packets
+                for (unsigned int i = 0; i < clients_.size(); ++i) {
+                    if (FD_ISSET(clients_[i].fd_, &read_set)) {
+                        if ((msg_size = my_read(clients_[i].fd_, msg, MAX_LINE)) > 0) {
+                            // Output to server console
+                            std::cout << clients_[i].host_ << "(" <<ntohs(clients_[i].port_)
+                            << "): " << msg << std::endl;
+                            for (unsigned int j = 0; j < clients_.size(); ++j) {
+                                if (i != j) {
+                                    my_write(clients_[j].fd_, msg, sizeof(msg));
+                                }
                             }
+                        } else {
+                            std::cout << lan_name_ << ": disconnect from '"
+                                      << clients_[i].host_ << "(" << ntohs(clients_[i].port_)
+                                      << ")'\n";
+                            remove_client(clients_[i], i, all_set);
                         }
-                    } else {
-                        std::cout << "admin: disconnect from '"
-                        << clients_[i].host_ << "(" << ntohs(clients_[i].port_)
-                        << ")'\n";
-                        // Client disconnected, remove from client
-                        close(clients_[i].fd_);
-                        FD_CLR(clients_[i].fd_, &all_set);
-                        clients_.erase(clients_.begin()+i);
+                        break;
                     }
-                    break;
                 }
             }
         }

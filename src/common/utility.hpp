@@ -37,7 +37,7 @@ public:
     
     /*  Accessors   */
     bool get_on() { return on_; }
-
+    
 private:
     std::string type_;
     bool on_;

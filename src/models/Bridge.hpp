@@ -28,13 +28,17 @@ public:
     void start();
     
 private:
+    // TODO: Add msg parameter
+    ClientData package_client_data(int cli_fd, struct sockaddr_in cli_addr);
+    
     void setup_server_info();
     void setup_socket();
     void create_symlink();
-    
+    void remove_client(ClientData cli, int index, fd_set &all_set);
     
     const int NUM_PORTS_;
     
+    int curr_ports_;
     std::vector<ClientData> clients_;
     std::string lan_name_;
     AddrData *addr_;

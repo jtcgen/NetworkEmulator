@@ -10,6 +10,7 @@
 #define Client_hpp
 
 #include <stdio.h>
+#include <string>
 #include <arpa/inet.h>
 
 #include "AddrData.hpp"
@@ -21,9 +22,9 @@ public:
     virtual ~Client() {}
     virtual void start() = 0;
 protected:
-    char iface_;
-//    int serv_fd_;
-    char serv_name_[100];
+    std::string iface_;     // Interface file name
+    std::string rtable_;    // Routing Table  file name
+    std::string hname_;     // Host file name
     
 //    AddrData *
 //    int serv_port_;
