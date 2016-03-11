@@ -158,7 +158,7 @@ int my_close(int fd) {
  @param content String contained in symlink
  @param fname Name of symlinnk
 */
-void my_symlink(char *content, char *fname) {
+void my_symlink(char *content, const char *fname) {
     if (symlink(content, fname) == -1)
         my_error("Error: could not create symlink.");
 }

@@ -27,7 +27,7 @@ ssize_t my_write(int fd, const void *buff, size_t nbytes);
 struct hostent* my_gethostbyname(char *name);
 void my_gethostname(char *name, size_t len);
 int my_select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
-void my_symlink(char *content, char *fname);
+void my_symlink(char *content, const char *fname);
 
 
 class Log {

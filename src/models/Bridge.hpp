@@ -14,8 +14,11 @@
 #include <string.h>
 #include <vector>
 
+
 #include "utility.hpp"
 #include "Client.hpp"
+#include "AddrData.hpp"
+#include "ClientData.hpp"
 
 class Bridge {
 public:
@@ -29,13 +32,13 @@ private:
     void setup_socket();
     void create_symlink();
     
-    struct hostent *info_;     // Holds host info
-    struct sockaddr_in addr_;  // Contains server internet address information
-    unsigned short port_;
+    
+    const int NUM_PORTS_;
+    
+    std::vector<ClientData> clients_;
+    std::string lan_name_;
+    AddrData *addr_;
     unsigned int listen_fd_;
-    std::vector<Client> clients_;
-    int num_ports_;
-    char *lan_name_;
     Log debug;
 };
 

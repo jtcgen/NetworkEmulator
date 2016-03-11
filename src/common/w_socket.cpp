@@ -10,7 +10,7 @@
 #include <cerrno>
 #include "w_socket.hpp"
 
- int WSocket::socket(int domain, int type, int protocol) {
+int WSocket::socket(int domain, int type, int protocol) {
     int fd;
     if ((fd = socket(domain, type, protocol)) == -1 )
         my_error("Socket: Socket creation failed.");
