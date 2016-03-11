@@ -12,10 +12,11 @@
 #include <string>
 
 class ClientData {
+public:
     friend class Bridge;
     
-    ClientData(int fd, char *host, short port) :
-        fd_(fd), host_(host), port_(port) { };
+    ClientData(char type, int fd, char *host, short port) :
+        type_(type), fd_(fd), host_(host), port_(port) { };
     
 private:
     char type_;     // Station or Bridge
