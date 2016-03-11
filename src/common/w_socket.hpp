@@ -6,6 +6,7 @@
 #include "utility.hpp"
 
 class WSocket {
+public:
     static int socket(int domain, int type, int protocol);
     static int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
     static int listen(int socket, int backlog);

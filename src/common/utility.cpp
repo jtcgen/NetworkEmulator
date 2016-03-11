@@ -29,8 +29,8 @@ void my_error(std::string msg) {
  
     @param msg Message to be logged.
 */
-void my_log(std::string msg) {
-    std::cout << "Log: " << msg << std::endl;
+void Log::print(std::string msg) {
+    std::cout << "Logging - " << type_ << ": " << msg << std::endl;
 }
 
 /**
