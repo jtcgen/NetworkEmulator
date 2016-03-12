@@ -6,10 +6,10 @@
 //  Copyright © 2016 jtcgen. All rights reserved.
 //
 
-#ifndef IP_H
-#define IP_H
+#ifndef IP_HPP
+#define IP_HPP
 
-#include "ether.h"
+#include "ether.hpp"
 
 /* ARP packet types */
 #define ARP_REQUEST 0
@@ -24,9 +24,10 @@ typedef unsigned long IPAddr;
 
 /* Structure to represent an interface */
 
-typedef struct iface {
+typedef struct {
     char ifacename[32];
     IPAddr ipaddr;
+    IPAddr mask;
     MacAddr macaddr;
     char lanname[32];
 } Iface;
@@ -120,8 +121,7 @@ typedef struct host
 {
     char name[32];
     IPAddr addr;
-}
-Host;
+} Host;
 
 typedef struct lan_rout {
     short router_attached;
@@ -129,21 +129,21 @@ typedef struct lan_rout {
 } LAN_ROUT;
 
 /* some global variables here */
-Host host[MAXHOSTS];
-int hostcnt;
+extern Host host[MAXHOSTS];
+extern int hostcnt;
 
-Iface iface_list[MAXINTER];
+extern Iface iface_list[MAXINTER];
 /* if there is router on this lan, 1; else 0 */
-LAN_ROUT lan_router[MAXINTER];
-ITF2LINK link_socket[MAXINTER];
-int intr_cnt; /* counter for interface */
+extern LAN_ROUT lan_router[MAXINTER];
+extern ITF2LINK link_socket[MAXINTER];
+extern int intr_cnt; /* counter for interface */
 
-Rtable rt_table[MAXHOSTS*MAXINTER];
-int rt_cnt;
+extern Rtable rt_table[MAXHOSTS*MAXINTER];
+extern int rt_cnt;
 
-PENDING_QUEUE *pending_queue;
-ARP_LIST *arp_cache;
+extern PENDING_QUEUE *pending_queue;
+extern ARP_LIST *arp_cache;
 
-int ROUTER;
+extern int ROUTER;
 
-#endif /* IP_H */
+#endif /* IP_HPP */

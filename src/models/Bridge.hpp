@@ -10,13 +10,13 @@
 #define Bridge_hpp
 
 #include <stdio.h>
+#include <iostream>
 #include <arpa/inet.h>
 #include <string.h>
 #include <vector>
 
-
+#include "w_socket.hpp"
 #include "utility.hpp"
-#include "Client.hpp"
 #include "AddrData.hpp"
 #include "ClientData.hpp"
 

@@ -6,14 +6,14 @@
 //  Copyright © 2016 jtcgen. All rights reserved.
 //
 
-#ifndef ETHER_H
-#define ETHER_H
+#ifndef ETHER_HPP
+#define ETHER_HPP
 
 #define PEER_CLOSED 2
 #define TYPE_IP_PKT 1
 #define TYPE_ARP_PKT 0
 
-typedef unsigned char MacAddr[6];
+typedef unsigned char MacAddr[12];
 
 /* structure of an ethernet pkt */
 typedef struct __etherpkt

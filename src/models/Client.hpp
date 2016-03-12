@@ -11,24 +11,35 @@
 
 #include <stdio.h>
 #include <string>
+#include <vector>
 #include <arpa/inet.h>
+#include <iostream>
+#include <fstream>
+#include <string.h>
+#include <cstdlib>
+#include <unistd.h>
 
-#include "AddrData.hpp"
+#include "utility.hpp"
+#include "ip.hpp"
 
 class Client {
 public:
-    Client(char *iface, char *rtable, char *host_name);
-    Client(char* serv_name, char* port);
+    Client(char *iface, char *rtable, char *hname);
     virtual ~Client() {}
     virtual void start() = 0;
+
 protected:
-    std::string iface_;     // Interface file name
-    std::string rtable_;    // Routing Table  file name
-    std::string hname_;     // Host file name
+    void load_lans(char *lan);
+    void load_interfaces(char *iface);
+    void load_routes(char *rtable);
     
-//    AddrData *
-//    int serv_port_;
-//    struct sockaddr_in serv_addr_;
+    std::vector<Iface*> ifaces_;
+    std::vector<Host*> lans_;
+    std::vector<Rtable*> routes_;
+    
+    /*  FILE NAMES */
+//    std::string iface_;         // Interface file name
+//    std::string rtable_;        // Routing Table  file name
 };
 
 #endif /* Client_hpp */

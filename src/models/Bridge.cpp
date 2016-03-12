@@ -6,11 +6,9 @@
 //  Copyright © 2016 jtcgen. All rights reserved.
 //
 
-#include <iostream>
-
 #include "Bridge.hpp"
 
-#include "w_socket.hpp"
+
 /**
     Constructor
  

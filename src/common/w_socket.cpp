@@ -6,8 +6,7 @@
 //  Copyright © 2016 jtcgen. All rights reserved.
 //
 
-#include <stdio.h>
-#include <cerrno>
+
 #include "w_socket.hpp"
 
 int WSocket::socket(int domain, int type, int protocol) {

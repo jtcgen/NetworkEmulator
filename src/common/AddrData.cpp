@@ -12,8 +12,14 @@
 #include "AddrData.hpp"
 #include "utility.hpp"
 
+/**
+    Initializes address information for Server type classes.
+ 
+    @param none.
+    @return none.
+ */
 AddrData::AddrData() {
-    // Configure server information
+    // Configure Server information
     size_t serv_size = sizeof(addr_);
     bzero(&addr_, serv_size);
     addr_.sin_addr.s_addr = htonl(INADDR_ANY);
@@ -25,7 +31,15 @@ AddrData::AddrData() {
     info_ = gethostbyname(temp_host);
 }
 
+/**
+    Initializes address information for Client type classes.
+ 
+    @param serv_name ASCII representation of lan name.
+    @param port Port of server.
+    @return none.
+ */
 AddrData::AddrData(char *serv_name, char *port) {
+    // Configure Client information
     port_ = atoi(port);
     struct hostent *info_ = my_gethostbyname(serv_name);
     
