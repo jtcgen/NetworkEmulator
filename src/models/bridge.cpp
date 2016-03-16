@@ -6,7 +6,13 @@
 //  Copyright © 2016 jtcgen. All rights reserved.
 //
 
-#include "Bridge.hpp"
+#include <fstream>
+#include <string>
+#include <sstream>
+
+#include <netinet/in.h>
+
+#include "bridge.hpp"
 
 
 /**
@@ -31,7 +37,6 @@ Bridge::Bridge(char *lan_name, int num_ports, bool debug_on) :
     @return none
 */
 Bridge::~Bridge() {
-    delete addr_;
 }
 
 
@@ -46,9 +51,40 @@ void Bridge::create_symlink() {
     char content[30];                   // Msg of symlink
     char addr_buffer[INET_ADDRSTRLEN];
     
-    inet_ntop(AF_INET, (void*)&addr_->addr_.sin_addr, addr_buffer, INET_ADDRSTRLEN);
-    sprintf(content, "%s %d", addr_buffer, addr_->port_);
-    my_symlink(content, lan_name_.c_str());
+    inet_ntop(AF_INET, (void*)&addr_.sin_addr, addr_buffer, INET_ADDRSTRLEN);
+    sprintf(content, "%s %d", addr_buffer, port_);
+    
+    // Create File
+    std::ofstream out;                  // Write to file
+    std::ostringstream fname;           // Format file name
+    
+    // Format file name
+    fname << "./tmp/" << lan_name_ << ".txt";
+//    fname << lan_name_ << ".txt";
+    
+    out.open(fname.str());
+    
+    if (!out) {
+        std::ostringstream ss2;
+        ss2 << "Failed to open " << fname.str() << ".";
+        if (debug.get_on())
+            debug.print(ss2.str());
+        
+        my_error(ss2.str());
+    }
+    
+    // Write to file
+    out << content;
+    
+    // Create symlink to file
+    my_symlink(fname.str().c_str(), lan_name_.c_str());
+    
+    if (debug.get_on()) {
+        std::ostringstream ss3;
+        ss3 << "Created symlink " << lan_name_ << " to file "
+            << fname.str() << std::endl;
+        debug.print(ss3.str());
+    }
 }
 
 /**
@@ -58,21 +94,20 @@ void Bridge::create_symlink() {
     @return none
  */
 void Bridge::setup_server_info() {
-    addr_ = new AddrData;
     // Configure server information
     size_t serv_size = sizeof(addr_);
     bzero(&addr_, serv_size);
-    addr_->addr_.sin_addr.s_addr = htonl(INADDR_ANY);
-    addr_->addr_.sin_family = AF_INET;
-    addr_->addr_.sin_port = htons((short)0);      // Bind to random available port
+    addr_.sin_addr.s_addr = htonl(INADDR_ANY);
+    addr_.sin_family = AF_INET;
+    addr_.sin_port = htons((short)0);      // Bind to random available port
     
     char temp_host[100];
     my_gethostname(temp_host, sizeof(temp_host));
-    addr_->info_ = gethostbyname(temp_host);
+    info_ = gethostbyname(temp_host);
     
     if (debug.get_on()) {
         std::ostringstream out;
-        out << "Configured server on: " << addr_->info_->h_name;
+        out << "Configured server on: " << info_->h_name;
         debug.print(out.str());
     }
 }
@@ -85,19 +120,19 @@ void Bridge::setup_server_info() {
     @return none
  */
 void Bridge::setup_socket() {
-    listen_fd_ = WSocket::socket(AF_INET, SOCK_STREAM, 0);
-    WSocket::bind(listen_fd_, (struct sockaddr*) &addr_, sizeof(addr_));
-    WSocket::listen(listen_fd_, NUM_PORTS_);
+    listen_fd_ = WSocket::wsocket(AF_INET, SOCK_STREAM, 0);
+    WSocket::wbind(listen_fd_, (struct sockaddr*) &addr_, sizeof(addr_));
+    WSocket::wlisten(listen_fd_, NUM_PORTS_);
     
     // Get Port number
     struct sockaddr_in sin;
     socklen_t len = sizeof(sin);
-    WSocket::getsockname(listen_fd_, (struct sockaddr*)&sin, &len);
-    addr_->port_ = (unsigned short)ntohs(sin.sin_port);
+    WSocket::wgetsockname(listen_fd_, (struct sockaddr*)&sin, &len);
+    port_ = (unsigned short)ntohs(sin.sin_port);
     
     if (debug.get_on()) {
         std::ostringstream out;
-        out << "Created socket: " << listen_fd_ << " on port: " << addr_->port_;
+        out << "Created socket: " << listen_fd_ << " on port: " << port_;
         debug.print(out.str());
     }
 }
@@ -111,7 +146,7 @@ void Bridge::setup_socket() {
     @return none
  */
 void Bridge::remove_client(ClientData cli, int index, fd_set &all_set) {
-    close(cli.fd_);
+    my_close(cli.fd_);
     FD_CLR(cli.fd_, &all_set);
     clients_.erase(clients_.begin()+index);
     --curr_ports_;
@@ -161,8 +196,8 @@ void Bridge::start() {
     
     if (debug.get_on()) {
         std::ostringstream out;
-        out << lan_name_ << ": started server on '" << addr_->info_->h_name
-            << "'' at '" << addr_->port_ << "'" << std::endl;
+        out << lan_name_ << ": started server on '" << info_->h_name
+            << "'' at '" << port_ << "'" << std::endl;
         debug.print(out.str());
     }
     
@@ -177,7 +212,7 @@ void Bridge::start() {
             for (unsigned int i = 0; i < FD_SETSIZE; ++i) {
                 // New client (station/router) requesting connection
                 if (i == listen_fd_) {
-                    int cli_fd = WSocket::accept(listen_fd_, (struct sockaddr *)&cli_addr,
+                    int cli_fd = WSocket::waccept(listen_fd_, (struct sockaddr *)&cli_addr,
                                               &client_size);
                     
                     clients_.push_back(package_client_data(cli_fd, cli_addr));

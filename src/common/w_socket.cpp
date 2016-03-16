@@ -9,7 +9,7 @@
 
 #include "w_socket.hpp"
 
-int WSocket::socket(int domain, int type, int protocol) {
+int WSocket::wsocket(int domain, int type, int protocol) {
     int fd;
     if ((fd = socket(domain, type, protocol)) == -1 )
         my_error("Socket: Socket creation failed.");
@@ -17,7 +17,7 @@ int WSocket::socket(int domain, int type, int protocol) {
     return fd;
 }
 
-int WSocket::accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
+int WSocket::waccept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
     int fd;
     while ((fd = accept(sockfd, addr, addrlen)) == -1) {
         if (errno == EINTR)
@@ -29,21 +29,21 @@ int WSocket::accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
     return fd;
 }
 
-int WSocket::listen(int socket, int backlog) {
+int WSocket::wlisten(int socket, int backlog) {
     if (listen(socket, backlog) == -1)
         my_error("Socket: Listen Failed.");
     
     return 0;
 }
 
-int WSocket::bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
+int WSocket::wbind(int sockfd, const struct sockaddr *addr, socklen_t addrlen) {
     if (bind(sockfd, addr, addrlen) == -1)
         my_error("Socket: Bind failed");
     
     return 0;
 }
 
-int WSocket::getsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
+int WSocket::wgetsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen) {
     if (getsockname(sockfd, addr, addrlen) == -1)
         my_error("Socket: getsockname failed.");
     

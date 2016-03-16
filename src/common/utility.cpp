@@ -6,6 +6,7 @@
 //  Copyright © 2016 jtcgen. All rights reserved.
 //
 
+#include <stdlib.h>
 #include <iostream>
 #include <unistd.h>
 #include <cerrno>
@@ -158,8 +159,8 @@ int my_close(int fd) {
  @param content String contained in symlink
  @param fname Name of symlinnk
 */
-void my_symlink(char *content, const char *fname) {
-    if (symlink(content, fname) == -1)
+void my_symlink(const char *path1, const char *path2) {
+    if (symlink(path1, path2) == -1)
         my_error("Error: could not create symlink.");
 }
 

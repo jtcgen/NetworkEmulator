@@ -6,7 +6,7 @@
 //  Copyright © 2016 jtcgen. All rights reserved.
 //
 
-#include "Client.hpp"
+#include "client.hpp"
 
 /**
     Constructor
@@ -45,6 +45,18 @@ Client::Client(char *iface, char *rtable, char *hname) {
  */
 void Client::load_lans(char *lan) {
     // Read symbolic link
+    std::ifstream in;
+    
+    in.open(lan);
+    if (!in) {
+        std::ostringstream out;
+        out << "Failed to open " << lan << ".";
+        my_error(out.str());
+    }
+    
+    while(in.good()) {
+        
+    }
     
 }
 

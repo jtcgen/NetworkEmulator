@@ -8,11 +8,11 @@
 class WSocket {
 public:
     /*      Wrappers        */
-    static int socket(int domain, int type, int protocol);
-    static int accept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
-    static int listen(int socket, int backlog);
-    static int bind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
-    static int getsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+    static int wsocket(int domain, int type, int protocol);
+    static int waccept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
+    static int wlisten(int socket, int backlog);
+    static int wbind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
+    static int wgetsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 };
 
 #endif

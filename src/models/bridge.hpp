@@ -17,8 +17,9 @@
 
 #include "w_socket.hpp"
 #include "utility.hpp"
-#include "AddrData.hpp"
-#include "ClientData.hpp"
+#include "clientData.hpp"
+#include "ip.hpp"
+#include "ether.hpp"
 
 class Bridge {
 public:
@@ -41,8 +42,12 @@ private:
     int curr_ports_;
     std::vector<ClientData> clients_;
     std::string lan_name_;
-    AddrData *addr_;
+    
+    struct hostent *info_;     // Holds host info
+    struct sockaddr_in addr_;  // Contains server internet address information
+    int port_;
     unsigned int listen_fd_;
+    
     Log debug;
 };
 
