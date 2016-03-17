@@ -122,7 +122,6 @@ typedef struct packet_queue
 typedef struct host
 {
     std::string name;
-//    char name[32];
     IPAddr addr;
 } Host;
 
@@ -131,15 +130,30 @@ typedef struct lan_rout {
     short counter;
 } LAN_ROUT;
 
-/* some global variables here */
-
+// Bridges and stations will be added in sequential order...NOT THREAD SAFE
 class IP {
 public:
+    /**
+     *  Checks if host is already in existence.
+     *
+     *  @param host     Name of Host
+     */
+    static bool host_exists(std::string host);
+    
+    /**
+     *  Adds host to list of existing hosts.
+     *
+     *  @param host     New bridge/station.
+     *  @return         Success status.
+     */
+    static bool add_host(std::string host);
+    
+    
     static const int MAX_HOSTS = 32;
     static const int MAX_INTER = 32;
     
     static Host host[MAX_HOSTS];
-    static int hostcnt;
+    static int host_cnt;
     
     static Iface iface_list[MAX_INTER];
     /* if there is router on this lan, 1; else 0 */
@@ -155,23 +169,5 @@ public:
     
     static int ROUTER;
 };
-
-//extern Host host[MAXHOSTS];
-//extern int hostcnt = 0;
-//
-//extern Iface iface_list[MAXINTER];
-///* if there is router on this lan, 1; else 0 */
-//extern LAN_ROUT lan_router[MAXINTER];
-//extern ITF2LINK link_socket[MAXINTER];
-//extern int intr_cnt; /* counter for interface */
-//
-//extern Rtable rt_table[MAXHOSTS*MAXINTER];
-//extern int rt_cnt;
-//
-//extern PENDING_QUEUE *pending_queue;
-//extern ARP_LIST *arp_cache;
-//
-//extern int ROUTER;
-
 
 #endif /* IP_HPP */

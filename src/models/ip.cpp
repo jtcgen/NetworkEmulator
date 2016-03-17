@@ -11,7 +11,7 @@
 #include "ip.hpp"
 
 Host IP::host[MAX_HOSTS];
-int IP::hostcnt = 0;
+int IP::host_cnt = 0;
 int IP::intr_cnt; /* counter for interface */
 int IP::rt_cnt = 0;
 int IP::ROUTER = 0;
@@ -24,3 +24,37 @@ Rtable IP::rt_table[MAX_HOSTS * MAX_INTER];
 
 PENDING_QUEUE* IP::pending_queue;
 ARP_LIST* IP::arp_cache;
+
+/**
+ *  Checks if host is already in existence.
+ *
+ *  @param host     Name of Host
+ */
+bool IP::host_exists(std::string h) {
+    bool result = false;
+    
+    for (int i = 0; i < host_cnt; ++i) {
+        if (strcmp(h.c_str(), host[i].name.c_str()) == 0) {
+            result = true;
+            break;
+        }
+    }
+    return result;
+}
+
+/**
+ *  Adds host to list of existing hosts.
+ *
+ *  @param host     New bridge/station.
+ *  @return         Status if successfully added
+ */
+bool IP::add_host(std::string hname) {
+    bool result = false;
+    
+    if (host_cnt < MAX_HOSTS) {
+        host[host_cnt++].name = hname;
+        result = true;
+    }
+    
+    return result;
+}

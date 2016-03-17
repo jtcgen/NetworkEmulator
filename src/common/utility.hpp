@@ -14,8 +14,6 @@
 #include <sstream>
 #include <netdb.h>
 
-#include "ip.hpp"
-
 #define EXIT_FAILURE 1
 
 /**
@@ -98,14 +96,6 @@ int my_select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, st
  *  @param fname Name of symlinnk
  */
 void my_symlink(const char *content, const char *fname);
-
-
-/**
- *  Checks if host is already in existence.
- *  
- *  @param host     Name of Host
- */
-bool host_exists(std::string host);
 
 
 class Log {

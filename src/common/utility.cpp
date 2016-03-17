@@ -170,22 +170,6 @@ void my_symlink(const char *path1, const char *path2) {
 }
 
 
-/**
- *  Checks if host is already in existence.
- *
- *  @param host     Name of Host
- */
-bool host_exists(std::string h) {
-    bool result = false;
-    
-    for (int i = 0; i < IP::hostcnt; ++i) {
-        if (strcmp(h.c_str(), IP::host[i].name.c_str()) == 0) {
-            result = true;
-            break;
-        }
-    }
-    return result;
-}
 
 
 

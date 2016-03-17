@@ -22,7 +22,7 @@
     @param num_ports Max number of ports that bridge can handle
     @param debug_on Flag to set debug settings
 */
-Bridge::Bridge(char *lan_name, int num_ports, bool debug_on) :
+Bridge::Bridge(const char *lan_name, int num_ports, bool debug_on) :
     NUM_PORTS_(num_ports), curr_ports_(0), lan_name_(lan_name), debug("Bridge", debug_on) {
     
     // Setup Bridge information
@@ -41,12 +41,9 @@ Bridge::~Bridge() {
 
 
 /**
-    Creates the symbolic link to its address and port number
-    so that others (stations/routers) can connect to it.
- 
-    @param none
-    @return none
-*/
+ *  Creates the symbolic link to its address and port number
+ *  so that others (stations/routers) can connect to it.
+ */
 void Bridge::create_symlink() {
     char content[30];                   // Msg of symlink
     char addr_buffer[INET_ADDRSTRLEN];
@@ -88,10 +85,7 @@ void Bridge::create_symlink() {
 }
 
 /**
-    Establishes bridge address information.
- 
-    @param none
-    @return none
+ *  Establishes bridge address information.
  */
 void Bridge::setup_server_info() {
     // Configure server information
@@ -113,11 +107,8 @@ void Bridge::setup_server_info() {
 }
 
 /**
-    Establishes socket information for incoming and outgoing
-    information.
- 
-    @param none
-    @return none
+ *  Establishes socket information for incoming and outgoing
+ *  information.
  */
 void Bridge::setup_socket() {
     listen_fd_ = WSocket::wsocket(AF_INET, SOCK_STREAM, 0);
@@ -153,12 +144,12 @@ void Bridge::remove_client(ClientData cli, int index, fd_set &all_set) {
 }
 
 /**
-    Collects requested client address information.
- 
-    @param cli_fd Client File descriptor.
-    @param cli_addr Client address information.
-    @param msg Packet frame sent from client.   TODO: ADD parameters
-    @return ClientData
+ *  Collects requested client address information.
+ *
+ *  @param cli_fd       Client File descriptor.
+ *  @param cli_addr     Client address information.
+ *  @param msg          Packet frame sent from client.   TODO: ADD parameters
+ *  @return ClientData
  */
 ClientData Bridge::package_client_data(int cli_fd, struct sockaddr_in cli_addr) {
     char type = 's';              // Station or Router
@@ -174,11 +165,8 @@ ClientData Bridge::package_client_data(int cli_fd, struct sockaddr_in cli_addr) 
     return ClientData(type, cli_fd, host, ntohs(cli_addr.sin_port));
 }
 /**
-    Initiates bridge. Listens for open/close requests from stations and
-    routers, and regular data packets.
- 
-    @param none
-    @return none
+ *  Initiates bridge. Listens for open/close requests from stations and
+ *  routers, and regular data packets.
  */
 void Bridge::start() {
     const int MAX_LINE = 100;
@@ -205,7 +193,8 @@ void Bridge::start() {
         // Block until input is receieved
         read_set = all_set;
         
-        // Monitor multiple TCP sockets
+        // Actively listens for connection setup request and
+        // data frame arrival on established ports
         my_select(max_fd + 1, &read_set, NULL, NULL, NULL);
         
         if (FD_ISSET(listen_fd_, &read_set)) {
