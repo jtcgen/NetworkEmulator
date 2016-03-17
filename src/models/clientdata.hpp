@@ -16,7 +16,7 @@ public:
     friend class Bridge;
     
     ClientData(char type, int fd, char *host, short port) :
-        type_(type), fd_(fd), host_(host), port_(port) { };
+        type_(type), fd_(fd), port_(port), host_(host) { };
     
 private:
     char type_;     // Station or Bridge

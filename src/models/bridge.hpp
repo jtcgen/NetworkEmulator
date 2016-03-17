@@ -17,8 +17,8 @@
 
 #include "w_socket.hpp"
 #include "utility.hpp"
-#include "clientData.hpp"
-#include "ip.hpp"
+#include "clientdata.hpp"
+//#include "ip.hpp"
 #include "ether.hpp"
 
 class Bridge {

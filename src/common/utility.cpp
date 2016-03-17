@@ -10,13 +10,16 @@
 #include <iostream>
 #include <unistd.h>
 #include <cerrno>
+
 #include "utility.hpp"
+#include "ip.hpp"
+
 
 /**
-    error wrapper function
- 
-    @param msg Specific message to be outputted.
-*/
+ *  error wrapper function
+ *
+ *  @param msg      Specific message to be outputted.
+ */
 void my_error(std::string msg) {
     if (errno)
         std::cerr << strerror(errno) << ": " << msg << std::endl;
@@ -26,22 +29,22 @@ void my_error(std::string msg) {
 }
 
 /**
-    logging function
- 
-    @param msg Message to be logged.
-*/
+ *  logging function
+ *
+ *  @param msg      Message to be logged.
+ */
 void Log::print(std::string msg) {
     std::cout << "Logging - " << type_ << ": " << msg << std::endl;
 }
 
 /**
-    read wrapper function
- 
-    @param fd File descriptor to read from
-    @param vptr Message container
-    @param n Max size to be read
-    @return Number of bytes read
-*/
+ *  read wrapper function
+ *
+ *  @param fd       File descriptor to read from
+ *  @param vptr     Message container
+ *  @param n        Max size to be read
+ *  @return         Number of bytes read
+ */
 ssize_t my_read(int fd, void *vptr, size_t n) {
     ssize_t nleft;
     ssize_t nread;
@@ -69,13 +72,13 @@ ssize_t my_read(int fd, void *vptr, size_t n) {
 }
 
 /**
-     write wrapper function
-     
-     @param fd File descriptor to write to
-     @param vptr Message to be sent
-     @param n Size of message
-     @return Number of bytes written
-*/
+ *  write wrapper function
+ *
+ *  @param fd       File descriptor to write to
+ *  @param vptr     Message to be sent
+ *  @param n        Size of message
+ *  @return         Number of bytes written
+ */
 ssize_t my_write(int fd, const void *vptr, size_t n) {
     ssize_t nleft;
     ssize_t nwritten;
@@ -99,12 +102,12 @@ ssize_t my_write(int fd, const void *vptr, size_t n) {
 /**
     select function wrapper
  
-    @param nfds Socket file descriptor
-    @param rfds Read fds ready to be read
-    @param wfds Write fds ready to write
-    @param efds Error fds checked for error
-    @param to Max time to wait
-    @return Active file descriptor
+    @param nfds     Socket file descriptor
+    @param rfds     Read fds ready to be read
+    @param wfds     Write fds ready to write
+    @param efds     Error fds checked for error
+    @param to       Max time to wait
+    @return         Active file descriptor
  */
 int my_select(int nfds, fd_set *rfds, fd_set *wfds,
               fd_set *efds, struct timeval *to) {
@@ -116,11 +119,12 @@ int my_select(int nfds, fd_set *rfds, fd_set *wfds,
 }
 
 /**
-    hostbyname wrapper
- 
-    @param name Host name
-    @return host structure
-*/
+ *
+ *  hostbyname wrapper
+ *
+ *   @param name    Host name
+ *   @return        Host structure
+ */
 struct hostent* my_gethostbyname(char *name) {
     struct hostent *server = gethostbyname(name);
     
@@ -131,10 +135,11 @@ struct hostent* my_gethostbyname(char *name) {
 }
 
 /**
- gethostname wrapper
- 
- @param name cString to contain name of host
- @param len Max len of cString
+ *
+ *  gethostname wrapper
+ *
+ *  @param name     cString to contain name of host
+ *  @param len      Max len of cString
  */
 void my_gethostname(char *name, size_t len) {
     if (gethostname(name, len) == -1)
@@ -142,25 +147,45 @@ void my_gethostname(char *name, size_t len) {
 }
 
 /**
-    File close wrapper
- 
-    @param fd file descriptor to be closed
-    @return status of close return
+ *
+ *  File close wrapper
+ *
+ *  @param fd       File descriptor to be closed
+ *  @return         Status of close return
  */
-
 int my_close(int fd) {
     if (close(fd) == -1) my_error("Close failed.");
     return 0;
 }
 
 /**
- symlink wrapper
- 
- @param content String contained in symlink
- @param fname Name of symlinnk
-*/
+ *  symlink wrapper
+ *
+ *  @param content      String contained in symlink
+ *  @param fname        Name of symlinnk
+ */
 void my_symlink(const char *path1, const char *path2) {
     if (symlink(path1, path2) == -1)
         my_error("Error: could not create symlink.");
 }
+
+
+/**
+ *  Checks if host is already in existence.
+ *
+ *  @param host     Name of Host
+ */
+bool host_exists(std::string h) {
+    bool result = false;
+    
+    for (int i = 0; i < IP::hostcnt; ++i) {
+        if (strcmp(h.c_str(), IP::host[i].name.c_str()) == 0) {
+            result = true;
+            break;
+        }
+    }
+    return result;
+}
+
+
 

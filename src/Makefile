@@ -1,23 +1,52 @@
-CC     = g++
-CFLAGS = -g
-INCLUDES = -I./common/ -I./models/ 
-CFLAGS = -Wall -g -c 
-B_OBJS = models/bridge.o models/w_socket.o models/utility.o
+### PROJECT SETTINGS
+# Name of executables
+BIN_BRIDGE := bridge
+BIN_STATION := station
 
-all: bridge 
+# Compiler flags
+CC := g++
 
-bridge: $(B_OBJS) 
-	$(CC) $(CFLAGS) $(INCLUDES) $(B_OBJS) -o bridge
+# Additional compiler flags 
+CFLAGS := -Wall -g -c 
+LFLAGS := -Wall -g 
 
-models/bridge.o: models/bridge.hpp models/bridge.cpp common/w_socket.hpp common/utility.hpp models/clientdata.hpp models/ip.hpp models/ether.hpp
-	$(CC) $(CFLAGS) $(INCLUDES) bridge.cpp
+# Include paths
+INCLUDES := -I./common/ -I./models/
 
-common/w_socket.o: common/w_socket.hpp common/w_socket.cpp common/utility.hpp
-	$(CC) $(CFLAGS) $(INCLUDES) w_socket.cpp
+# Path to source directory, relative to makefile
+SRC_PATH = .
 
-common/utility.o: common/utility.hpp common/utility.cpp
-	$(CC) $(CFLAGS) $(INCLUDES) utility.cpp
+# Path to destination directory, relative to makefile
+DST_PATH = .
 
-clean : 
-	rm -f bridge *.o
+# Find all source files 
+COMMON_SRC := $(shell find -f -path ./common -name '*.cpp')
+BRIDGE_SRC := $(shell find . -name 'main.cpp' -o -name 'bridge.cpp' -o -name 'ip.cpp') $(COMMON_SRC)
+
+# Set object file names
+B_OBJ := $(BRIDGE_SRC:%.cpp=%.o) 
+
+#SRC := $(shell find . -name '*.cpp')
+#OBJ := $(SRC:%.cpp=%.o)
+
+
+### COMPILATION RULES
+all: $(BIN_BRIDGE) $(BIN_STATION)
+
+$(BIN_BRIDGE): $(B_OBJ) 
+	$(CC) $(LFLAGS) $(B_OBJ) -o $@
+
+$(BIN_STATION):
+	echo 'station'
+
+%.o: %.cpp
+	$(CC) $(CFLAGS) $(INCLUDES) $< -o $@
+
+.PHONY: clean
+clean: 
+	find . -type f -name '*.o' -exec rm {} +
+
+realclean: clean
+	rm $(BIN_BRIDGE)
+
 

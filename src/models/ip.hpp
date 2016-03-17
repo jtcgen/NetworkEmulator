@@ -9,6 +9,7 @@
 #ifndef IP_HPP
 #define IP_HPP
 
+#include <string>
 #include "ether.hpp"
 
 /* ARP packet types */
@@ -19,6 +20,7 @@
 #define PROT_TYPE_UDP 0
 #define PROT_TYPE_TCP 1
 #define PROT_TYPE_OSPF 2
+
 
 typedef unsigned long IPAddr;
 
@@ -114,12 +116,13 @@ typedef struct packet_queue
 /*-------------------------------------------------------------------- */
 
 
-#define MAXHOSTS 32
-#define MAXINTER 32
+//#define MAXHOSTS 32
+//#define MAXINTER 32
 
 typedef struct host
 {
-    char name[32];
+    std::string name;
+//    char name[32];
     IPAddr addr;
 } Host;
 
@@ -129,21 +132,46 @@ typedef struct lan_rout {
 } LAN_ROUT;
 
 /* some global variables here */
-extern Host host[MAXHOSTS];
-extern int hostcnt;
 
-extern Iface iface_list[MAXINTER];
-/* if there is router on this lan, 1; else 0 */
-extern LAN_ROUT lan_router[MAXINTER];
-extern ITF2LINK link_socket[MAXINTER];
-extern int intr_cnt; /* counter for interface */
+class IP {
+public:
+    static const int MAX_HOSTS = 32;
+    static const int MAX_INTER = 32;
+    
+    static Host host[MAX_HOSTS];
+    static int hostcnt;
+    
+    static Iface iface_list[MAX_INTER];
+    /* if there is router on this lan, 1; else 0 */
+    static LAN_ROUT lan_router[MAX_INTER];
+    static ITF2LINK link_socket[MAX_INTER];
+    static int intr_cnt; /* counter for interface */
+    
+    static Rtable rt_table[MAX_HOSTS*MAX_INTER];
+    static int rt_cnt;
+    
+    static PENDING_QUEUE *pending_queue;
+    static ARP_LIST *arp_cache;
+    
+    static int ROUTER;
+};
 
-extern Rtable rt_table[MAXHOSTS*MAXINTER];
-extern int rt_cnt;
+//extern Host host[MAXHOSTS];
+//extern int hostcnt = 0;
+//
+//extern Iface iface_list[MAXINTER];
+///* if there is router on this lan, 1; else 0 */
+//extern LAN_ROUT lan_router[MAXINTER];
+//extern ITF2LINK link_socket[MAXINTER];
+//extern int intr_cnt; /* counter for interface */
+//
+//extern Rtable rt_table[MAXHOSTS*MAXINTER];
+//extern int rt_cnt;
+//
+//extern PENDING_QUEUE *pending_queue;
+//extern ARP_LIST *arp_cache;
+//
+//extern int ROUTER;
 
-extern PENDING_QUEUE *pending_queue;
-extern ARP_LIST *arp_cache;
-
-extern int ROUTER;
 
 #endif /* IP_HPP */

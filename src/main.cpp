@@ -7,11 +7,20 @@
 //
 
 #include <iostream>
-#include "w_socket.hpp"
-#include "utility.hpp"
+
+#include "bridge.hpp"
+#include "ip.hpp"
+
+
 
 int main(int argc, const char * argv[]) {
     // insert code here...
-    std::cout << "Hello, World!\n";
+    
+    char lan[2] = "A";
+    int ports = 3;
+    bool debug = true;
+    
+    Bridge(lan, ports, debug);
+    
     return 0;
 }
