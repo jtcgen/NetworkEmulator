@@ -9,7 +9,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
-
+#include <unistd.h>
 #include <netinet/in.h>
 
 #include "bridge.hpp"
@@ -46,10 +46,11 @@ Bridge::~Bridge() {
  */
 void Bridge::create_symlink() {
     char content[30];                   // Msg of symlink
-    char addr_buffer[INET_ADDRSTRLEN];
+    std::string ip_addr;
     
-    inet_ntop(AF_INET, (void*)&addr_.sin_addr, addr_buffer, INET_ADDRSTRLEN);
-    sprintf(content, "%s %d", addr_buffer, port_);
+    in_addr *addr = (in_addr*) info_->h_addr;
+    ip_addr = inet_ntoa(*addr);
+    sprintf(content, "%s %d", ip_addr.c_str(), port_);
     
     // Create File
     std::ofstream out;                  // Write to file
@@ -59,11 +60,11 @@ void Bridge::create_symlink() {
     fname << "./tmp/" << lan_name_ << ".txt";
 //    fname << lan_name_ << ".txt";
     
-    out.open(fname.str());
+    out.open(fname.str().c_str());
     
     if (!out) {
         std::ostringstream ss2;
-        ss2 << "Failed to open " << fname.str() << ".";
+        ss2 << "Failed to open " << fname.str().c_str() << ".";
         if (debug.get_on())
             debug.print(ss2.str());
         
@@ -79,7 +80,8 @@ void Bridge::create_symlink() {
     if (debug.get_on()) {
         std::ostringstream ss3;
         ss3 << "Created symlink " << lan_name_ << " to file "
-            << fname.str() << std::endl;
+            << fname.str() << std::endl
+            << "Contents: " << content;
         debug.print(ss3.str());
     }
 }
@@ -101,7 +103,7 @@ void Bridge::setup_server_info() {
     
     if (debug.get_on()) {
         std::ostringstream out;
-        out << "Configured server on: " << info_->h_name;
+        out << "Configured server on: " << info_->h_name << temp_host;
         debug.print(out.str());
     }
 }

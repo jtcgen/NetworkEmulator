@@ -6,6 +6,7 @@
 //  Copyright © 2016 jtcgen. All rights reserved.
 //
 //
+#include <stdlib.h>
 #include <iostream>
 
 #include "bridge.hpp"

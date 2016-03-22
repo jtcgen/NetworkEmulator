@@ -6,6 +6,7 @@
 //  Copyright © 2016 jtcgen. All rights reserved.
 //
 
+#include <cerrno>
 
 #include "w_socket.hpp"
 

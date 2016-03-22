@@ -9,6 +9,7 @@
 #ifndef IP_HPP
 #define IP_HPP
 
+#include <string.h>
 #include <string>
 #include "ether.hpp"
 
@@ -27,12 +28,11 @@ typedef std::string IPAddr;
 /* Structure to represent an interface */
 
 typedef struct iface {
-//    char ifacename[32];
     std::string ifacename;
     IPAddr ipaddr;
     IPAddr mask;
     MacAddr macaddr;
-    char lanname[32];
+    std::string lanname;
 } Iface;
 
 /* mapping between interface name and socket id representing link */
@@ -92,7 +92,7 @@ typedef struct ip_pkt
     short   protocol;
     unsigned long    sequenceno;
     short   length;
-    char    data[BUFSIZ];
+//    char    data[BUFSIZ];
 } IP_PKT;
 
 /*queue for ip packet that has not yet sent out*/
