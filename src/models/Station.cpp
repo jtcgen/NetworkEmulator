@@ -56,5 +56,5 @@ void Station::start() {
     
     FD_ZERO(&read_set);
     FD_SET(0, &read_set);
-    FD_SET(
+//    FD_SET(
 }
