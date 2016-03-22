@@ -12,13 +12,16 @@
 #include <stdio.h>
 #include <string>
 #include <vector>
+#include <sys/types.h>
 #include <arpa/inet.h>
+#include <netinet/in.h>
 #include <iostream>
 #include <fstream>
 #include <string.h>
 #include <cstdlib>
 #include <unistd.h>
 
+#include "w_socket.hpp"
 #include "utility.hpp"
 #include "ip.hpp"
 
@@ -29,17 +32,54 @@ public:
     virtual void start() = 0;
 
 protected:
-    void load_lans(char *lan);
+    /*  CONFIGURATION FUNC  */
+    
+    /**
+     *  Reads symbolic link and loads Lan IP address
+     *  and lan name.
+     *
+     *  @param hname        Symbolic link host name.
+     */
+    void load_lans();
+    
+    /**
+     *  Reads and stores interface data from iface filename
+     *  and stores read.
+     *
+     *  @param iface        Interface file name
+     */
     void load_interfaces(char *iface);
+    
+    /**
+     *  Reads and stores Host name and IP address
+     *
+     *  @param host        Host file name
+     */
+    void load_hosts(char *host);
+    
+    /**
+     *  Reads and stores routes stored in Routing Table file.
+     *
+     *  @param rtable       Routing table file name.
+     */
     void load_routes(char *rtable);
     
-    std::vector<Iface*> ifaces_;
-    std::vector<Host*> lans_;
-    std::vector<Rtable*> routes_;
+    /**
+     *  Binds socket to connected Bridge address and server.
+     *
+     *  @param bridge       Bridge structure connected to client
+     */
+    void socket_to_host(Iface *bridge);
     
-    /*  FILE NAMES */
-//    std::string iface_;         // Interface file name
-//    std::string rtable_;        // Routing Table  file name
+    /**
+     *
+     */
+    
+    std::vector<Iface*> ifaces_;            // Interface information
+    std::vector<Host*> lans_;               // Connected bridges
+    std::vector<Rtable*> routes_;           // Routing table information
+    std::vector<SocketData*> sd_;           // Socket Data
+    std::vector<Host*> hosts_;              // All actie stations and routers
 };
 
 #endif /* Client_hpp */

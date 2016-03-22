@@ -21,13 +21,14 @@
 #define PROT_TYPE_TCP 1
 #define PROT_TYPE_OSPF 2
 
-
-typedef unsigned long IPAddr;
+//typedef unsigned long IPAddr;
+typedef std::string IPAddr;
 
 /* Structure to represent an interface */
 
-typedef struct {
-    char ifacename[32];
+typedef struct iface {
+//    char ifacename[32];
+    std::string ifacename;
     IPAddr ipaddr;
     IPAddr mask;
     MacAddr macaddr;
@@ -123,6 +124,7 @@ typedef struct host
 {
     std::string name;
     IPAddr addr;
+    short port;
 } Host;
 
 typedef struct lan_rout {

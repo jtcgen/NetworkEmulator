@@ -6,7 +6,7 @@
 #include "utility.hpp"
 
 class WSocket {
-public:
+  public:
     /*      Wrappers        */
     static int wsocket(int domain, int type, int protocol);
     static int waccept(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
@@ -14,6 +14,15 @@ public:
     static int wbind(int sockfd, const struct sockaddr *addr, socklen_t addrlen);
     static int wgetsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 };
+
+class SocketData {
+  public:
+    int fd;                                 // File descriptor
+    struct hostent *info_;                  // Holds host info
+    struct sockaddr_in addr_;               // Contains server internet address information
+    
+};
+
 
 #endif
 

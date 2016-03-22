@@ -21,7 +21,7 @@ DST_PATH = .
 
 # Find all source files 
 COMMON_SRC := $(shell find -f -path ./common -name '*.cpp')
-BRIDGE_SRC := $(shell find . -name 'main.cpp' -o -name 'bridge.cpp' -o -name 'ip.cpp') $(COMMON_SRC)
+BRIDGE_SRC := $(shell find . -name 'main_bridge.cpp' -o -name 'bridge.cpp' -o -name 'ip.cpp') $(COMMON_SRC)
 
 # Set object file names
 B_OBJ := $(BRIDGE_SRC:%.cpp=%.o) 
