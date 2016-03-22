@@ -44,19 +44,19 @@ typedef struct itface2link {
 /* Structure for a routing table entry */
 
 typedef struct rtable {
-    IPAddr destsubnet;
-    IPAddr nexthop;
+    IPAddr dest_subnet;
+    IPAddr next_hop;
     IPAddr mask;
     char ifacename[32];
 } Rtable;
 
 
-/* Structure for an ARP cache entry */
-
-typedef struct arpcache {
-    IPAddr ipaddr;
-    MacAddr macaddr;
-} Arpc;
+///* Structure for an ARP cache entry */
+//
+//typedef struct arpcache {
+//    IPAddr ip_addr;
+//    MacAddr mac_addr;
+//} Arpc;
 
 /*--------------------------------------------------------------------*/
 
@@ -67,33 +67,30 @@ typedef struct arpcache {
 /*--------------------------------------------------------------------*/
 /* Structure for ARP packets */
 
-/*list of arp cache, to use this one to maintain current cache*/
-
-typedef struct arp_list {
-    Arpc *arp_item;
-    struct arp_list *next;
-} ARP_LIST;
+/*Map of ARP cache, used to maintain current cache*/
+typedef std::map<IPAddr, MacAddr> ArpMap
 
 /*ARP packet format*/
 typedef struct arp_pkt
 {
     short op; /* op =0 : ARP request; op = 1 : ARP response */
-    IPAddr srcip;
-    MacAddr srcmac;
-    IPAddr dstip;
-    MacAddr dstmac;
-} ARP_PKT;
+    IPAddr src_ip;
+    MacAddr src_mac;
+    IPAddr dst_ip;
+    MacAddr dst_mac;
+} ArpPkt;
 
 /*IP packet format*/
 typedef struct ip_pkt
 {
-    IPAddr  dstip;
-    IPAddr  srcip;
+    IPAddr  dst_ip;
+    IPAddr  src_ip;
     short   protocol;
     unsigned long    sequenceno;
     short   length;
+    std::string data;
 //    char    data[BUFSIZ];
-} IP_PKT;
+} IpPkt;
 
 /*queue for ip packet that has not yet sent out*/
 typedef struct p_queue
@@ -103,7 +100,7 @@ typedef struct p_queue
     char *pending_pkt;
     struct p_queue *next;
     
-} PENDING_QUEUE;
+} PendingQueue;
 
 /*queue to remember the packets we have received*/
 typedef struct packet_queue
@@ -112,7 +109,7 @@ typedef struct packet_queue
     int  length;
     short counter;
     struct packet_queue *next;
-} OLD_PACKETS;
+} OldPackets;
 
 /*-------------------------------------------------------------------- */
 
@@ -130,7 +127,7 @@ typedef struct host
 typedef struct lan_rout {
     short router_attached;
     short counter;
-} LAN_ROUT;
+} LanRoute;
 
 // Bridges and stations will be added in sequential order...NOT THREAD SAFE
 class IP {

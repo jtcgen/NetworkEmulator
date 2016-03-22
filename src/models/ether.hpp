@@ -13,7 +13,9 @@
 #define TYPE_IP_PKT 1
 #define TYPE_ARP_PKT 0
 
-typedef unsigned char MacAddr[12];
+#include <string>
+
+typedef std::string MacAddr;
 
 /* structure of an ethernet pkt */
 typedef struct __etherpkt
