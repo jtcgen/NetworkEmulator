@@ -16,7 +16,7 @@
 int main(int argc, const char * argv[]) {
     
     if (argc != 4)
-        my_error("LAN_NAME NUM_PORTS DEBUG");
+        my_error("LAN_NAME NUM_PORTS");
     
     if (IP::host_exists(argv[1]) == true)
         my_error("Host already exists.");
@@ -25,9 +25,12 @@ int main(int argc, const char * argv[]) {
         my_error("Exceed host capacity.");
     
     int ports = (int)atoi(argv[2]);
-    bool debug = (bool)atoi(argv[3]);
 
-    Bridge(argv[1], ports, debug);
+    Bridge *b = new Bridge(argv[1], ports);
+    
+    b->start();
+    
+    delete b;
     
     return 0;
 }

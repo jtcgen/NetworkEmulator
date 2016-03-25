@@ -63,10 +63,10 @@ void Client::load_hosts(char *host) {
         hosts_.push_back(nhost);
         
         if (debug.get_on()) {
-            std::ostringstream ss;
-            ss << "Loading Host: " << nhost->name
+            std::ostringstream out;
+            out << "Loading Host: " << nhost->name
             << " Address: " << nhost->addr;
-            debug.print(ss.str());
+            debug.print(out.str());
         }
     }
 }
@@ -87,24 +87,13 @@ void Client::load_lans() {
 //    const int BUF_SIZE = 100;
 //    char buf[BUF_SIZE];
 
-//    for (std::vector<Iface*>::iterator itr = ifaces_.begin(); itr != ifaces_.end(); ++itr) {
-//        Host *n_host = new Host;
-//        
-//        n_host->name = (*itr)->iface_name;
-//    }
-    
-    for (int i = 0; i < ifaces_.size(); ++i) {
+    for (std::vector<Iface*>::iterator itr = ifaces_.begin(); itr != ifaces_.end(); ++itr) {
         Host *n_host = new Host;
-        n_host->name = ifaces_[i]->iface_name;
         
-//        // Read Symlink
-//        memset(buf, '\0', sizeof(char)*BUF_SIZE);
-//        if (readlink(n_host->name.c_str(), buf, BUF_SIZE) == -1) {
-//            my_error("Read symbolic link failed.");
-//        }
+        n_host->name = (*itr)->iface_name;
         
         // Open corresponding file
-        in.open(n_host->name);
+        in.open(n_host->name.c_str());
         if (!in) {
             std::ostringstream out;
             out << "Failed to open " << n_host->name << ".";
@@ -116,14 +105,46 @@ void Client::load_lans() {
         lans_.push_back(n_host);
         
         if (debug.get_on()) {
-            std::ostringstream ss;
-            ss << "Loading lan: " << n_host->name << " IP Address: "
+            std::ostringstream out;
+            out << "Loading lan: " << n_host->name << " IP Address: "
             << n_host->addr << " on Port: " << n_host->port;
-            debug.print(ss.str());
+            debug.print(out.str());
         }
         
         in.close();
     }
+    
+//    for (int i = 0; i < ifaces_.size(); ++i) {
+//        Host *n_host = new Host;
+//        n_host->name = ifaces_[i]->iface_name;
+//        
+////        // Read Symlink
+////        memset(buf, '\0', sizeof(char)*BUF_SIZE);
+////        if (readlink(n_host->name.c_str(), buf, BUF_SIZE) == -1) {
+////            my_error("Read symbolic link failed.");
+////        }
+//        
+//        // Open corresponding file
+//        in.open(n_host->name);
+//        if (!in) {
+//            std::ostringstream out;
+//            out << "Failed to open " << n_host->name << ".";
+//            my_error(out.str());
+//        }
+//        
+//        // Load data into host structure
+//        in >> n_host->addr >> n_host->port;
+//        lans_.push_back(n_host);
+//        
+//        if (debug.get_on()) {
+//            std::ostringstream ss;
+//            ss << "Loading lan: " << n_host->name << " IP Address: "
+//            << n_host->addr << " on Port: " << n_host->port;
+//            debug.print(ss.str());
+//        }
+//        
+//        in.close();
+//    }
 }
 
 /**
@@ -159,12 +180,12 @@ void Client::load_interfaces(char *iface) {
         ifaces_.push_back(iface);
         
         if (debug.get_on()) {
-            std::ostringstream ss;
-            ss << "Loading Interface: " << iface->iface_name
+            std::ostringstream out;
+            out << "Loading Interface: " << iface->iface_name
             << " Network Mask: " << iface->net_mask
             << " MAC Address: " << iface->mac_addr
             << " Lan: " << iface->lan_name;
-            debug.print(ss.str());
+            debug.print(out.str());
         }
 
     }
@@ -203,12 +224,12 @@ void Client::load_routes(char *rtable) {
         routes_.push_back(route);
         
         if (debug.get_on()) {
-            std::ostringstream ss;
-            ss << "Loading Routing Interface: " << route->iface_name
+            std::ostringstream out;
+            out << "Loading Routing Interface: " << route->iface_name
             << " Destination Address: " << route->dest_addr
             << " Network Mask: " << route->net_mask
             << " Next Hop: " << route->next_hop;
-            debug.print(ss.str());
+            debug.print(out.str());
         }
     }
     
@@ -235,9 +256,9 @@ void Client::socket_to_host(Host *bridge, SocketData *sd) {
     sd->fd = WSocket::wsocket(AF_INET, SOCK_STREAM, 0);
     
     if (debug.get_on()) {
-        std::ostringstream ss;
-        ss << "Binding socket " << sd->fd << " to " << bridge->addr.c_str();
-        debug.print(ss.str());
+        std::ostringstream out;
+        out << "Binding socket " << sd->fd << " to " << bridge->addr.c_str();
+        debug.print(out.str());
     }
 }
 

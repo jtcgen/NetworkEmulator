@@ -12,7 +12,7 @@
 #include <stdio.h>
 #include <string>
 
-#include "Client.hpp"
+#include "client.hpp"
 
 class Station: Client {
 public:

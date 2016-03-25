@@ -38,6 +38,14 @@ void Log::print(std::string msg) {
 }
 
 /**
+ *  Clears out out stringstream object.
+ */
+void Log::clear() {
+    out_.str("");
+    out_.clear();
+}
+
+/**
  *  read wrapper function
  *
  *  @param fd       File descriptor to read from
@@ -58,15 +66,13 @@ ssize_t my_read(int fd, void *vptr, size_t n) {
                 nread = 0; // Call read() again
             } else my_error("Read Error");
         } else if (nread == 0) break;   // EOF
-        
         nleft -= nread;
         ptr += nread;
         
-        if (*(ptr-2) == '\r') { // Read appends \r\n
-            *(ptr-2) = '\0';
+        if (*(ptr-1) == '\n') { // Read appends \r\n
+            *(ptr-1) = '\0';
             break;
         }
-        
     }
     return n - nleft;
 }

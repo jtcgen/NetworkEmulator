@@ -109,8 +109,13 @@ public:
     
     /*  Accessors   */
     bool get_on() { return on_; }
+    void set_on(bool on) { on_ = on; }
+    
+    std::ostringstream out_;
     
 private:
+    void clear();
+    
     std::string type_;
     bool on_;
 };

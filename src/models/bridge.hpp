@@ -28,8 +28,7 @@ typedef std::map<Port, MacAddr>::iterator BridgeTableItr;
 class Bridge {
 public:
     Bridge(const char *lan_name,
-           int num_ports,
-           bool debug_on);
+           int num_ports);
     
     ~Bridge();
     

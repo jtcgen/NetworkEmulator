@@ -21,7 +21,7 @@ Station::~Station() {
         delete *itr;
     
     // Clean up lans
-    for (int i = 0; i < lans_.size(); ++i) {
+    for (unsigned i = 0; i < lans_.size(); ++i) {
         delete lans_[i];
         delete sd_[i];
     }
@@ -37,13 +37,13 @@ Station::~Station() {
 
 // TODO: Question, are stations that connect to multiple lans supposed to have individual station?
 void Station::start() {
-    int max_fd;
-    fd_set read_set;
-    struct sockaddr_in sock_addr;
-    socklen_t sock_size;
-    int sock_port;
-    
-    FD_ZERO(&read_set);
-    FD_SET(0, &read_set);
+//    int max_fd;
+//    fd_set read_set;
+//    struct sockaddr_in sock_addr;
+//    socklen_t sock_size;
+//    int sock_port;
+//    
+//    FD_ZERO(&read_set);
+//    FD_SET(0, &read_set);
 //    FD_SET(
 }

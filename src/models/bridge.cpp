@@ -22,8 +22,8 @@
     @param num_ports Max number of ports that bridge can handle
     @param debug_on Flag to set debug settings
 */
-Bridge::Bridge(const char *lan_name, int num_ports, bool debug_on) :
-    NUM_PORTS_(num_ports), curr_ports_(0), lan_name_(lan_name), debug("Bridge", debug_on) {
+Bridge::Bridge(const char *lan_name, int num_ports) :
+    NUM_PORTS_(num_ports), curr_ports_(0), lan_name_(lan_name), debug("Bridge", true) {
     
     // Setup Bridge information
     setup_server_info();
@@ -50,7 +50,7 @@ void Bridge::create_symlink() {
     
     in_addr *addr = (in_addr*) info_->h_addr;
     ip_addr = inet_ntoa(*addr);
-    content << ip_addr << port_;
+    content << ip_addr << " " << port_;
     
     // Create File
     std::ofstream out;                  // Write to file
@@ -77,11 +77,11 @@ void Bridge::create_symlink() {
     my_symlink(fname.str().c_str(), lan_name_.c_str());
     
     if (debug.get_on()) {
-        std::ostringstream ss3;
-        ss3 << "Created symlink " << lan_name_ << " to file "
+        std::ostringstream out;
+        out << "Created symlink " << lan_name_ << " to file "
             << fname.str() << std::endl
             << "Contents: " << content.str();
-        debug.print(ss3.str());
+        debug.print(out.str());
     }
 }
 
@@ -242,23 +242,46 @@ void Bridge::start() {
                     if (cli_fd > max_fd)
                         max_fd = cli_fd;
                     
-                    std::cout << lan_name_ << ": connect from '" << clients_.back().host_
-                    << "' at '" << ntohs(cli_addr.sin_port) << "'\n";
+                    
+                    if (debug.get_on()) {
+                        std::ostringstream out;
+                        out << lan_name_ << ": connect from '" << clients_.back().host_
+                        << "' at '" << ntohs(cli_addr.sin_port);
+                        debug.print(out.str());
+                    }
                     
                     ++curr_ports_;
                     
                     // If num_ports is at capacity, send Reject msg to client and close conn.
                     if (curr_ports_ > NUM_PORTS_) {
+                        if (debug.get_on()) {
+                            std::ostringstream out;
+                            out << "Rejected connection.";
+                            debug.print(out.str());
+                        }
+                        
                         my_write(clients_.back().fd_, "Rejected", sizeof("Rejected"));
                         remove_client(clients_.back(), (int)(clients_.size() - 1), all_set);
                     } else {
+                        if (debug.get_on()) {
+                            std::ostringstream out;
+                            out << "Accpeted connection.";
+                            debug.print(out.str());
+                        }
+                        
                         my_write(clients_.back().fd_, "Accepted", sizeof("Accepted"));
                     }
                 }
             }
         } else {
             if (FD_ISSET(STDIN_FILENO, &read_set)) {
-                stop = true;
+                if ((msg_size = my_read(STDIN_FILENO, msg, MAX_LINE))) {
+                    if (strncmp(msg, "debug", sizeof(char)*5) == 0) {
+                        debug.set_on(!debug.get_on());
+                    } else if (strncmp(msg, "off", sizeof(char)*3) == 0){
+                        stop = true;
+                    }
+                }
             } else {
                 // TODO!!
                 // Incoming data frame packets
@@ -283,6 +306,9 @@ void Bridge::start() {
                     }
                 }
             }
+            
+            // Clear buffer
+            memset(msg, '\0', sizeof(char) * MAX_LINE);
         }
     }
 
