@@ -19,7 +19,7 @@ public:
         type_(type), fd_(fd), port_(port), host_(host) { };
     
 private:
-    char type_;     // Station or Bridge
+    char type_;     // Station or Router
     int fd_;
     int port_;
     std::string host_;

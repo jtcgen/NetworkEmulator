@@ -18,12 +18,12 @@ int IP::ROUTER = 0;
 
 Iface IP::iface_list[MAX_INTER];
 /* if there is router on this lan, 1; else 0 */
-LAN_ROUT IP::lan_router[MAX_INTER];
+LanRoute IP::lan_router[MAX_INTER];
 ITF2LINK IP::link_socket[MAX_INTER];
 Rtable IP::rt_table[MAX_HOSTS * MAX_INTER];
 
-PENDING_QUEUE* IP::pending_queue;
-ARP_LIST* IP::arp_cache;
+PendingQueue* IP::pending_queue;
+//ARP_LIST* IP::arp_cache;
 
 /**
  *  Checks if host is already in existence.

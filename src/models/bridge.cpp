@@ -45,12 +45,12 @@ Bridge::~Bridge() {
  *  so that others (stations/routers) can connect to it.
  */
 void Bridge::create_symlink() {
-    char content[30];                   // Msg of symlink
-    std::string ip_addr;
+    std::ostringstream content;      // File content
+    std::string ip_addr;                // Bridge IP address
     
     in_addr *addr = (in_addr*) info_->h_addr;
     ip_addr = inet_ntoa(*addr);
-    sprintf(content, "%s %d", ip_addr.c_str(), port_);
+    content << ip_addr << port_;
     
     // Create File
     std::ofstream out;                  // Write to file
@@ -58,7 +58,6 @@ void Bridge::create_symlink() {
     
     // Format file name
     fname << "./tmp/" << lan_name_ << ".txt";
-//    fname << lan_name_ << ".txt";
     
     out.open(fname.str().c_str());
     
@@ -72,7 +71,7 @@ void Bridge::create_symlink() {
     }
     
     // Write to file
-    out << content;
+    out << content.str();
     
     // Create symlink to file
     my_symlink(fname.str().c_str(), lan_name_.c_str());
@@ -81,7 +80,7 @@ void Bridge::create_symlink() {
         std::ostringstream ss3;
         ss3 << "Created symlink " << lan_name_ << " to file "
             << fname.str() << std::endl
-            << "Contents: " << content;
+            << "Contents: " << content.str();
         debug.print(ss3.str());
     }
 }
@@ -103,7 +102,7 @@ void Bridge::setup_server_info() {
     
     if (debug.get_on()) {
         std::ostringstream out;
-        out << "Configured server on: " << info_->h_name << temp_host;
+        out << "Configured server on: " << info_->h_name;
         debug.print(out.str());
     }
 }
@@ -166,6 +165,35 @@ ClientData Bridge::package_client_data(int cli_fd, struct sockaddr_in cli_addr) 
     
     return ClientData(type, cli_fd, host, ntohs(cli_addr.sin_port));
 }
+
+/**
+ *  Checks bridge table for associated station/router.
+ *
+ *  @param port         Incoming station port
+ *  @param mac          Incoming station MAC address
+ *  @return             True if contains, else false
+ */
+bool Bridge::has_mapping(Port port, MacAddr mac) {
+    bool result = false;
+    BridgeTableItr itr = btable_.find(port);
+    
+    if (itr != btable_.end())
+        result = true;
+    
+    return result;
+}
+
+
+/**
+ *  Adds incoming port and MAC address to bridge table.
+ *
+ *  @param port         Incoming station port
+ *  @param mac          Incoming station MAC address
+ */
+void Bridge::add_mapping(Port port, MacAddr mac) {
+    btable_.insert(std::pair<Port, MacAddr>(port, mac));
+}
+
 /**
  *  Initiates bridge. Listens for open/close requests from stations and
  *  routers, and regular data packets.
@@ -214,10 +242,8 @@ void Bridge::start() {
                     if (cli_fd > max_fd)
                         max_fd = cli_fd;
                     
-                    
                     std::cout << lan_name_ << ": connect from '" << clients_.back().host_
                     << "' at '" << ntohs(cli_addr.sin_port) << "'\n";
-                    
                     
                     ++curr_ports_;
                     
@@ -234,6 +260,7 @@ void Bridge::start() {
             if (FD_ISSET(STDIN_FILENO, &read_set)) {
                 stop = true;
             } else {
+                // TODO!!
                 // Incoming data frame packets
                 for (unsigned int i = 0; i < clients_.size(); ++i) {
                     if (FD_ISSET(clients_[i].fd_, &read_set)) {

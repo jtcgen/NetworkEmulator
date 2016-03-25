@@ -10,10 +10,7 @@
 
 #include "client.hpp"
 
-
-
-
-int main(int argc, const char * argv[]) {
+int main(int argc, const char **argv) {
     
     if (argc != 6)
         my_error(" R/S INTERFACE ROUTE_TABLE HOST_NAME DEBUG");

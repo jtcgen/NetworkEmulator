@@ -14,12 +14,16 @@
 #include <arpa/inet.h>  // inet_ntop
 #include <string.h>
 #include <vector>
+#include <map>
 
 #include "w_socket.hpp"
 #include "utility.hpp"
 #include "clientdata.hpp"
 #include "ip.hpp"
 #include "ether.hpp"
+
+typedef std::map<Port, MacAddr> BridgeTable;
+typedef std::map<Port, MacAddr>::iterator BridgeTableItr;
 
 class Bridge {
 public:
@@ -36,6 +40,23 @@ public:
     void start();
     
 private:
+    /**
+     *  Checks bridge table for associated station/router.
+     *
+     *  @param port         Incoming station port
+     *  @param mac          Incoming station MAC address
+     *  @return             True if contains, else false
+     */
+    bool has_mapping(Port port, MacAddr mac);
+    
+    /**
+     *  Adds incoming port and MAC address to bridge table.
+     *
+     *  @param port         Incoming station port
+     *  @param mac          Incoming station MAC address
+     */
+    void add_mapping(Port port, MacAddr mac);
+    
     /**
      *  Collects requested client address information.
      *
@@ -75,6 +96,8 @@ private:
     struct sockaddr_in addr_;               // Contains server internet address information
     int port_;                              // Port binded to socket
     unsigned int listen_fd_;                // Actively listening on listen socket
+    
+    BridgeTable btable_;       // Bridge table for self-learning
     
     Log debug;
 };

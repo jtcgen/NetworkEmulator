@@ -16,7 +16,7 @@
 
 class Station: Client {
 public:
-    Station(char *iface, char *rtable, char *hname);
+    Station(char *iface, char *rtable, char *hname, bool debug_on);
     ~Station();
     
     void start();

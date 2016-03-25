@@ -11,6 +11,7 @@
 
 #include <string.h>
 #include <string>
+#include <map>
 #include "ether.hpp"
 
 /* ARP packet types */
@@ -22,17 +23,17 @@
 #define PROT_TYPE_TCP 1
 #define PROT_TYPE_OSPF 2
 
-//typedef unsigned long IPAddr;
 typedef std::string IPAddr;
+typedef short Port;
 
 /* Structure to represent an interface */
 
 typedef struct iface {
-    std::string ifacename;
-    IPAddr ipaddr;
-    IPAddr mask;
-    MacAddr macaddr;
-    std::string lanname;
+    std::string iface_name;
+    IPAddr ip_addr;                 // Interface IP address
+    IPAddr net_mask;                // Network mask
+    MacAddr mac_addr;               // MAC address
+    std::string lan_name;
 } Iface;
 
 /* mapping between interface name and socket id representing link */
@@ -44,10 +45,10 @@ typedef struct itface2link {
 /* Structure for a routing table entry */
 
 typedef struct rtable {
-    IPAddr dest_subnet;
-    IPAddr next_hop;
-    IPAddr mask;
-    char ifacename[32];
+    IPAddr dest_addr;               // Destination network address
+    IPAddr next_hop;                // Next-hop router address
+    IPAddr net_mask;                // Network mask
+    char iface_name[32];
 } Rtable;
 
 
@@ -68,7 +69,7 @@ typedef struct rtable {
 /* Structure for ARP packets */
 
 /*Map of ARP cache, used to maintain current cache*/
-typedef std::map<IPAddr, MacAddr> ArpMap
+typedef std::map<IPAddr, MacAddr> ArpMap;
 
 /*ARP packet format*/
 typedef struct arp_pkt
@@ -121,7 +122,7 @@ typedef struct host
 {
     std::string name;
     IPAddr addr;
-    short port;
+    Port port;
 } Host;
 
 typedef struct lan_rout {
@@ -156,15 +157,15 @@ public:
     
     static Iface iface_list[MAX_INTER];
     /* if there is router on this lan, 1; else 0 */
-    static LAN_ROUT lan_router[MAX_INTER];
+    static LanRoute lan_router[MAX_INTER];
     static ITF2LINK link_socket[MAX_INTER];
     static int intr_cnt; /* counter for interface */
     
     static Rtable rt_table[MAX_HOSTS*MAX_INTER];
     static int rt_cnt;
     
-    static PENDING_QUEUE *pending_queue;
-    static ARP_LIST *arp_cache;
+    static PendingQueue *pending_queue;
+//    static ArpList *arp_cache;
     
     static int ROUTER;
 };

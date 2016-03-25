@@ -27,7 +27,10 @@
 
 class Client {
 public:
-    Client(char *iface, char *rtable, char *hname);
+    Client(char *iface,
+           char *rtable,
+           char *hname,
+           bool debug_on);
     virtual ~Client() {}
     virtual void start() = 0;
 
@@ -69,7 +72,7 @@ protected:
      *
      *  @param bridge       Bridge structure connected to client
      */
-    void socket_to_host(Iface *bridge);
+    void socket_to_host(Host *bridge, SocketData *sd);
     
     /**
      *
@@ -79,7 +82,9 @@ protected:
     std::vector<Host*> lans_;               // Connected bridges
     std::vector<Rtable*> routes_;           // Routing table information
     std::vector<SocketData*> sd_;           // Socket Data
-    std::vector<Host*> hosts_;              // All actie stations and routers
+    std::vector<Host*> hosts_;              // All active stations and routers
+    
+    Log debug;
 };
 
 #endif /* Client_hpp */

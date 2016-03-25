@@ -6,9 +6,9 @@
 //  Copyright © 2016 jtcgen. All rights reserved.
 //
 
-#include "Station.hpp"
+#include "station.hpp"
 
-Station::Station(char *iface, char *rtable, char *hname) : Client(iface, rtable, hname){
+Station::Station(char *iface, char *rtable, char *hname, bool debug_on) : Client(iface, rtable, hname, debug_on){
     
 
 
@@ -33,17 +33,6 @@ Station::~Station() {
         delete *itr;
     
 }
-
-///**
-//    Reads symbolic link and extracts connected bridge's
-//    IP address and port number.
-// 
-//    @param link Name of symbolic link.
-//    @return
-// */
-//void load_bridge_data(std::string link, AddrData *bridge) {
-//    
-//}
 
 
 // TODO: Question, are stations that connect to multiple lans supposed to have individual station?
