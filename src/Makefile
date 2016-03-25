@@ -51,4 +51,4 @@ clean:
 	find . -type f -name '*.o' -exec rm {} +
 
 realclean: clean
-	rm $(BIN_BRIDGE)
+	rm $(BIN_BRIDGE) $(BIN_STATION)
