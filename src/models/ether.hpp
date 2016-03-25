@@ -37,7 +37,7 @@ typedef struct __etherpkt
     short   size;
     
     /* actual payload */
-    char *  dat;
+    void *dat;
     
 } EtherPkt;
 

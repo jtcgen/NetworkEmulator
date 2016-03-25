@@ -170,15 +170,54 @@ ClientData Bridge::package_client_data(int cli_fd, struct sockaddr_in cli_addr) 
  *  Checks bridge table for associated station/router.
  *
  *  @param port         Incoming station port
- *  @param mac          Incoming station MAC address
  *  @return             True if contains, else false
  */
-bool Bridge::has_mapping(Port port, MacAddr mac) {
+bool Bridge::has_port(Port port) {
     bool result = false;
     BridgeTableItr itr = btable_.find(port);
     
     if (itr != btable_.end())
         result = true;
+    
+    return result;
+}
+
+/**
+ *  Adds incoming port and MAC address to bridge table.
+ *
+ *  @param port         Incoming station port
+ */
+void Bridge::add_port(Port port) {
+    btable_.insert(std::pair<Port, BridgeTableValues>(port, BridgeTableValues()));
+}
+
+/**
+ *  Checks bridge table for associated station/router.
+ *
+ *  @param port         Incoming station port
+ *  @param station      Incoming station name
+ *  @return             True if contains, else false
+ */
+bool Bridge::has_station(Port port, std::string station) {
+//    for (BridgeTableItr itr = btable_.begin(); itr != btable_.end(); ++itr) {
+//        if (itr->first == port) {
+//            for (BridgeTableValuesItr itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
+//                if (itr2->second == station) {
+//                    return true;
+//                }
+//            }
+//        }
+//    }
+    
+    bool result = false;
+    BridgeTableItr itr = btable_.find(port);
+    if (itr != btable_.end()) {
+        result = true;
+    } else {
+        BridgeTableValuesItr itr2 = itr->second.find(station);
+        if (itr2 != itr->second.end())
+            result = true;
+    }
     
     return result;
 }
@@ -190,8 +229,16 @@ bool Bridge::has_mapping(Port port, MacAddr mac) {
  *  @param port         Incoming station port
  *  @param mac          Incoming station MAC address
  */
-void Bridge::add_mapping(Port port, MacAddr mac) {
-    btable_.insert(std::pair<Port, MacAddr>(port, mac));
+void Bridge::add_station(Port port, std::string station, MacAddr mac) {
+//    for (BridgeTableItr itr = btable_.begin(); itr != btable_.end(); ++itr) {
+//        if (itr->first == port) {
+//            itr->second.insert(std::pair<std::string, MacAddr>(station, mac));
+//        }
+//    }
+
+    
+    BridgeTableItr itr = btable_.find(port);
+    itr->second.insert(std::pair<std::string, MacAddr>(station, mac));
 }
 
 /**
@@ -288,18 +335,24 @@ void Bridge::start() {
                 for (unsigned int i = 0; i < clients_.size(); ++i) {
                     if (FD_ISSET(clients_[i].fd_, &read_set)) {
                         if ((msg_size = my_read(clients_[i].fd_, msg, MAX_LINE)) > 0) {
-                            // Output to server console
-                            std::cout << clients_[i].host_ << "(" <<ntohs(clients_[i].port_)
-                            << "): " << msg << std::endl;
-                            for (unsigned int j = 0; j < clients_.size(); ++j) {
-                                if (i != j) {
-                                    my_write(clients_[j].fd_, msg, sizeof(msg));
-                                }
-                            }
+                            // Check if dest MAC address is known
+                            
+//                            // Check if src MAC address is known
+//                            if (has_port(clients_[i].fd_))
+//                                if (has_station(clients_[i].fd_, STATION_NAME) == false)
+//                                    add_station(clients_[i].fd_, STATION_NAME, SRC_MAC_ADDR);
+//                            else
+//                                // If not, add port mapping to bridge table
+//                                add_port(clients_[i].fd_);
+                            
                         } else {
-                            std::cout << lan_name_ << ": disconnect from '"
+                            if (debug.get_on()) {
+                                std::ostringstream out;
+                                out << lan_name_ << ": disconnect from '"
                                       << clients_[i].host_ << "(" << ntohs(clients_[i].port_)
                                       << ")'\n";
+                                debug.print(out.str());
+                            }
                             remove_client(clients_[i], i, all_set);
                         }
                         break;

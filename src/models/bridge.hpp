@@ -22,8 +22,10 @@
 #include "ip.hpp"
 #include "ether.hpp"
 
-typedef std::map<Port, MacAddr> BridgeTable;
-typedef std::map<Port, MacAddr>::iterator BridgeTableItr;
+typedef std::map<std::string, MacAddr> BridgeTableValues;        // Key: Station name, Value: MAC Address
+typedef std::map<std::string, MacAddr>::iterator BridgeTableValuesItr;
+typedef std::map<Port, BridgeTableValues > BridgeTable;
+typedef std::map<Port, BridgeTableValues >::iterator BridgeTableItr;
 
 class Bridge {
 public:
@@ -43,18 +45,34 @@ private:
      *  Checks bridge table for associated station/router.
      *
      *  @param port         Incoming station port
-     *  @param mac          Incoming station MAC address
      *  @return             True if contains, else false
      */
-    bool has_mapping(Port port, MacAddr mac);
+    bool has_port(Port port);
     
     /**
      *  Adds incoming port and MAC address to bridge table.
      *
      *  @param port         Incoming station port
+     */
+    void add_port(Port port);
+    
+    /**
+     *  Checks bridge table for associated station/router.
+     *
+     *  @param port         Incoming station port
+     *  @param station      Incoming station name
+     *  @return             True if contains, else false
+     */
+    bool has_station(Port port, std::string station);
+    
+    /**
+     *  Adds incoming port and MAC address to bridge table.
+     *
+     *  @param port         Incoming station port
+     *  @param station      Incoming station name
      *  @param mac          Incoming station MAC address
      */
-    void add_mapping(Port port, MacAddr mac);
+    void add_station(Port port, std::string station, MacAddr mac);
     
     /**
      *  Collects requested client address information.
@@ -96,6 +114,7 @@ private:
     int port_;                              // Port binded to socket
     unsigned int listen_fd_;                // Actively listening on listen socket
     
+    // TODO: might have to be a key: port, value: <key=station,value=MAC_ADDR>
     BridgeTable btable_;       // Bridge table for self-learning
     
     Log debug;

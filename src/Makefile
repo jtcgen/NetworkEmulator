@@ -37,7 +37,7 @@ S_OBJ := $(STATION_SRC:%.cpp=%.o)
 ### COMPILATION RULES
 all: $(BIN_BRIDGE) $(BIN_STATION)
 
-$(BIN_BRIDGE): $(B_OBJ) 
+$(BIN_BRIDGE): $(B_OBJ)
 	$(CC) $(LFLAGS) $(B_OBJ) -o $@
 
 $(BIN_STATION): $(S_OBJ)
@@ -52,5 +52,3 @@ clean:
 
 realclean: clean
 	rm $(BIN_BRIDGE)
-
-

@@ -90,7 +90,6 @@ typedef struct ip_pkt
     unsigned long    sequenceno;
     short   length;
     std::string data;
-//    char    data[BUFSIZ];
 } IpPkt;
 
 /*queue for ip packet that has not yet sent out*/

@@ -15,7 +15,7 @@
 
 int main(int argc, const char * argv[]) {
     
-    if (argc != 4)
+    if (argc != 3)
         my_error("LAN_NAME NUM_PORTS");
     
     if (IP::host_exists(argv[1]) == true)
