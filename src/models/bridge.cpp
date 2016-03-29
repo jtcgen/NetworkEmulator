@@ -23,7 +23,11 @@
     @param debug_on Flag to set debug settings
 */
 Bridge::Bridge(const char *lan_name, int num_ports) :
-    NUM_PORTS_(num_ports), curr_ports_(0), lan_name_(lan_name), debug("Bridge", true) {
+    ARP_TIME(20000),
+    NUM_PORTS_(num_ports),
+    curr_ports_(0),
+    lan_name_(lan_name),
+    debug("Bridge", true) {
     
     // Setup Bridge information
     setup_server_info();
@@ -235,10 +239,30 @@ void Bridge::add_station(Port port, std::string station, MacAddr mac) {
 //            itr->second.insert(std::pair<std::string, MacAddr>(station, mac));
 //        }
 //    }
-
+    
+    ArpEntry *entry = new ArpEntry(station, mac, std::chrono::duration_cast< milliseconds >
+                                   (std::chrono::system_clock::now().time_since_epoch()));
     
     BridgeTableItr itr = btable_.find(port);
-    itr->second.insert(std::pair<std::string, MacAddr>(station, mac));
+    itr->second.insert(std::pair<std::string, ArpEntry*>(station, entry));
+}
+
+/**
+ *  Checks for inactive station in ARP cache.
+ */
+void Bridge::monitor_arp_cache() {
+    
+    milliseconds time = std::chrono::duration_cast< milliseconds >
+                            (std::chrono::system_clock::now().time_since_epoch());
+    
+    for (BridgeTableItr itr = btable_.begin(); itr != btable_.end(); ++itr) {
+        for (BridgeTableValuesItr itr2 = itr->second.begin(); itr2 != itr->second.end();) {
+            if ((time - itr2->second->init_time_) > ARP_TIME)
+                itr->second.erase(itr2++);
+            else
+                ++itr2;
+        }
+    }
 }
 
 /**
@@ -273,6 +297,8 @@ void Bridge::start() {
         // Actively listens for connection setup request and
         // data frame arrival on established ports
         my_select(max_fd + 1, &read_set, NULL, NULL, NULL);
+        
+        monitor_arp_cache();
         
         if (FD_ISSET(listen_fd_, &read_set)) {
             for (unsigned int i = 0; i < FD_SETSIZE; ++i) {
@@ -315,8 +341,11 @@ void Bridge::start() {
                             out << "Accpeted connection.";
                             debug.print(out.str());
                         }
-                        
+    
                         my_write(clients_.back().fd_, "Accepted", sizeof("Accepted"));
+                        
+                        // Add port mapping to arp cache
+                        add_port(cli_fd);
                     }
                 }
             }
@@ -337,13 +366,11 @@ void Bridge::start() {
                         if ((msg_size = my_read(clients_[i].fd_, msg, MAX_LINE)) > 0) {
                             // Check if dest MAC address is known
                             
-//                            // Check if src MAC address is known
-//                            if (has_port(clients_[i].fd_))
-//                                if (has_station(clients_[i].fd_, STATION_NAME) == false)
-//                                    add_station(clients_[i].fd_, STATION_NAME, SRC_MAC_ADDR);
-//                            else
-//                                // If not, add port mapping to bridge table
-//                                add_port(clients_[i].fd_);
+                            // Check if src MAC address is known
+//                            if (has_station(clients_[i].fd_, STATION_NAME) == false)
+//                                add_station(clients_[i].fd_, STATION_NAME, SRC_MAC_ADDR);
+
+
                             
                         } else {
                             if (debug.get_on()) {

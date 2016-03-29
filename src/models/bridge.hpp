@@ -15,6 +15,7 @@
 #include <string.h>
 #include <vector>
 #include <map>
+#include <chrono>       // timer
 
 #include "w_socket.hpp"
 #include "utility.hpp"
@@ -22,8 +23,23 @@
 #include "ip.hpp"
 #include "ether.hpp"
 
-typedef std::map<std::string, MacAddr> BridgeTableValues;        // Key: Station name, Value: MAC Address
-typedef std::map<std::string, MacAddr>::iterator BridgeTableValuesItr;
+typedef std::chrono::milliseconds milliseconds;
+
+typedef struct arp_entry {
+    arp_entry(std::string name,
+             MacAddr mac,
+             std::chrono::milliseconds t) :
+    name_(name),
+    mac_(mac),
+    init_time_(t) { }
+    
+    std::string name_;                       // Name of station
+    MacAddr mac_;                            // MAC address
+    std::chrono::milliseconds init_time_;    // Time of entry in milli seconds
+} ArpEntry;
+
+typedef std::map<std::string, ArpEntry*> BridgeTableValues;        // Key: Station name, Value: MAC Address
+typedef std::map<std::string, ArpEntry*>::iterator BridgeTableValuesItr;
 typedef std::map<Port, BridgeTableValues > BridgeTable;
 typedef std::map<Port, BridgeTableValues >::iterator BridgeTableItr;
 
@@ -41,6 +57,11 @@ public:
     void start();
     
 private:
+    /**
+     *  Checks for inactive station ins ARP cache.
+     */
+    void monitor_arp_cache();
+    
     /**
      *  Checks bridge table for associated station/router.
      *
@@ -103,6 +124,7 @@ private:
     void remove_client(ClientData cli, int index, fd_set &all_set);
     
     /*  CLIENT DATA     */
+    const milliseconds ARP_TIME;            // Allowed period of inactivity
     const int NUM_PORTS_;                   // Max capacity of ports
     int curr_ports_;                        // Current number of conn. ports
     std::vector<ClientData> clients_;       // Corresponding station/router data
