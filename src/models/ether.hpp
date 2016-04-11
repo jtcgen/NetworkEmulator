@@ -15,31 +15,35 @@
 
 #include <string>
 
-typedef std::string MacAddr;
+//#include "ip.hpp"
 
-/* structure of an ethernet pkt */
-typedef struct __etherpkt
-{
-    /* destination address in net order */
-    MacAddr dst;
-    
-    /* source address in net order */
-    MacAddr src;
-    
-    /************************************/
-    /* payload type in host order       */
-    /* type = 0 : ARP frame             */
-    /* type = 1 : IP  frame             */
-    /************************************/
-    short  type;
-    
-    /* size of the data in host order */
-    short   size;
-    
-    /* actual payload */
-    void *dat;
-    
-} EtherPkt;
 
+//typedef std::string MacAddr;
+
+///* structure of an ethernet pkt */
+//typedef struct __etherpkt
+//{
+//    /* destination address in net order */
+//    MacAddr dst;
+//    
+//    /* source address in net order */
+//    MacAddr src;
+//    
+//    /************************************/
+//    /* payload type in host order       */
+//    /* type = 0 : ARP frame             */
+//    /* type = 1 : IP  frame             */
+//    /************************************/
+//    short  type;
+//    
+////    /* size of the data in host order */
+////    short   size;
+////    
+////    struct arp_pkt arp_;
+////
+////    /*      IP      */
+////    IpPkt ip_;
+//
+//} EtherPkt;
 
 #endif /* ETHER_H */

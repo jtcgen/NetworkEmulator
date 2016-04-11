@@ -4,6 +4,7 @@
 
 #include <sys/socket.h>
 #include "utility.hpp"
+#include "ip.hpp"
 
 class WSocket {
   public:
@@ -15,13 +16,15 @@ class WSocket {
     static int wgetsockname(int sockfd, struct sockaddr *addr, socklen_t *addrlen);
 };
 
-class SocketData {
-  public:
-    int fd;                                 // File descriptor
-    struct hostent *info_;                  // Holds host info
-    struct sockaddr_in addr_;               // Contains server internet address information
+typedef struct socket_data {
+    IPAddr ip_addr;
+    Port port;
+    int fd;                                // File descriptor
+    struct hostent *info;                  // Holds host info
+    socklen_t sock_size;
+    struct sockaddr_in sock_addr;          // Contains server internet address information
     
-};
+} SocketData;
 
 
 #endif

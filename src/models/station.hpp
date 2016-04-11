@@ -14,9 +14,12 @@
 
 #include "client.hpp"
 
-class Station: Client {
+class Station: public Client {
 public:
-    Station(char *iface, char *rtable, char *hname, bool debug_on);
+    Station(const char *iface,
+            const char *rtable,
+            const char *hname,
+            bool is_router);
     ~Station();
     
     void start();

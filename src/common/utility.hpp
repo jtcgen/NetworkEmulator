@@ -11,8 +11,10 @@
 
 #include <sys/select.h>
 #include <string>
+#include <cstring>
 #include <sstream>
 #include <netdb.h>
+
 
 #define EXIT_FAILURE 1
 
@@ -78,14 +80,14 @@ struct hostent* my_gethostbyname(char *name);
 void my_gethostname(char *name, size_t len);
 
 /**
- select function wrapper
- 
- @param nfds        Socket file descriptor
- @param rfds        Read fds ready to be read
- @param wfds        Write fds ready to write
- @param efds        Error fds checked for error
- @param timeout     Max time to wait
- @return            Active file descriptor
+ *  select function wrapper
+ *
+ *  @param nfds        Socket file descriptor
+ *  @param rfds        Read fds ready to be read
+ *  @param wfds        Write fds ready to write
+ *  @param efds        Error fds checked for error
+ *  @param timeout     Max time to wait
+ *  @return            Active file descriptor
  */
 int my_select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, struct timeval *timeout);
 
@@ -97,25 +99,35 @@ int my_select(int nfds, fd_set *readfds, fd_set *writefds, fd_set *exceptfds, st
  */
 void my_symlink(const char *content, const char *fname);
 
+/**
+ *  readlink wrapper
+ *
+ *  @param path         Filename path
+ *  @param buf          Contents of the symbolic link
+ *  @param bufsiz       Size of the buffer
+ *  @return             Number of bytes placed in buf
+ */
+ssize_t my_readlink(const char *path, char *buf, size_t bufsiz);
 
 class Log {
 public:
     Log(std::string type,
         bool on) :
         type_(type),
-        on_(on) { };
+        on_(on) { clear(); };
     
-    void print(std::string msg);
+    void print();
     
     /*  Accessors   */
     bool get_on() { return on_; }
     void set_on(bool on) { on_ = on; }
-    
-    std::ostringstream out_;
+    std::ostringstream& get_oss();
+    std::ostringstream out;
     
 private:
     void clear();
     
+    std::ostringstream oss_;
     std::string type_;
     bool on_;
 };

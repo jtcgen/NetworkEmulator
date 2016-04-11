@@ -10,6 +10,8 @@
 #define Client_hpp
 
 #include <stdio.h>
+#include <stdlib.h>         // sleep
+#include <string.h>          // strtok
 #include <string>
 #include <vector>
 #include <sys/types.h>
@@ -20,20 +22,31 @@
 #include <string.h>
 #include <cstdlib>
 #include <unistd.h>
+#include <fcntl.h>          // fcntl blocking
 
+#include "clientdata.hpp"
 #include "w_socket.hpp"
 #include "utility.hpp"
 #include "ip.hpp"
 
+typedef struct next_hop_data {
+    IPAddr ip_addr;
+    std::string iface;
+} NextHop;
+
+typedef std::pair<Iface*, SocketData*> IfaceSocketPair;
+typedef std::vector< IfaceSocketPair > IfaceSocketVector;
+
 class Client {
 public:
-    Client(char *iface,
-           char *rtable,
-           char *hname,
-           bool debug_on);
-    virtual ~Client() {}
-    virtual void start() = 0;
-
+    Client(const char *iface,
+           const char *rtable,
+           const char *hname,
+           bool is_router);
+    ~Client();
+    void start();
+    
+    
 protected:
     /*  CONFIGURATION FUNC  */
     
@@ -51,39 +64,146 @@ protected:
      *
      *  @param iface        Interface file name
      */
-    void load_interfaces(char *iface);
+    void load_interfaces(const char *iface);
     
     /**
      *  Reads and stores Host name and IP address
      *
      *  @param host        Host file name
      */
-    void load_hosts(char *host);
+    void load_hosts(const char *host);
     
     /**
      *  Reads and stores routes stored in Routing Table file.
      *
      *  @param rtable       Routing table file name.
      */
-    void load_routes(char *rtable);
+    void load_routes(const char *rtable);
     
     /**
      *  Binds socket to connected Bridge address and server.
      *
      *  @param bridge       Bridge structure connected to client
      */
-    void socket_to_host(Host *bridge, SocketData *sd);
+    void socket_to_bridge(SocketData *&bridge);
     
     /**
+     *  Packages and sends Ethernet Packet.
      *
+     *  @param ip           
      */
+    void send_ether_pkt(IPAddr ip, std::string data);
     
-    std::vector<Iface*> ifaces_;            // Interface information
-    std::vector<Host*> lans_;               // Connected bridges
-    std::vector<Rtable*> routes_;           // Routing table information
-    std::vector<SocketData*> sd_;           // Socket Data
-    std::vector<Host*> hosts_;              // All active stations and routers
+    /**
+     *  Sends user message to destination.
+     *
+     *  @param dst          Intended destination
+     *  @param msg          Message content
+     */
+    void send_cmd(std::string dst, std::string msg);
     
+    /**
+     *  Scans incoming message from stdin and executes legal
+     *  commands.
+     *
+     *  @param cmd          User command
+     *  @param quit         Reference to quit program
+     */
+    void menu_commands(char *cmd, bool &quit);
+    
+    /**
+     *  Show the ARP cache table information.
+     */
+    void print_arp();
+    
+    /**
+     *  Show the pending queue.
+     */
+    void print_pq();
+    
+    /**
+     *  Show the IP/name mapping table.
+     */
+    void print_host();
+    
+    /**
+     *  Show interface information.
+     */
+    void print_iface();
+    
+    /**
+     *  Show the contents of the routing table.
+     */
+    void print_rtable();
+
+    /**
+     *  Outputs the contents of the Ethernet Packet.
+     *
+     *  @param pkt          Ethernet Packet
+     */
+    void print_ether_pkt(const EtherPkt &pkt);
+    
+    /**
+     *  Parses the IpAddr string and casts it to a long.
+     *
+     *  @param addr         IP Address
+     *  @param arr          Container for IP address elements
+     */
+    void parse_address(IPAddr addr, int *arr);
+    
+    /**
+     *  Searches the Routing table for the next hop.
+     *
+     *  @param host_dst     Station destination IP Address
+     *  @return             IP Address of next hop
+     */
+    NextHop get_next_hop(IPAddr host_dst);
+
+    /**
+     *  Retrieves the interface structure for the
+     *  corresponding interface name.
+     *
+     *  @param name         Interface Name
+     *  @return             Corresponding Interface struct
+     */
+    IfaceSocketPair get_iface(std::string name);
+    
+    /**
+     *  Retrieves the interface for the corresponding
+     *  IP address.
+     *
+     *  @param ip           IP address
+     *  @return             Corresponding Interface Name
+     */
+    std::string get_iface_for_ip(IPAddr ip);
+    
+    /**
+     *  Reads symbolic link. Loads Bridge data into
+     *  Socket/Server structure and returns.
+     *
+     *  @param iface      Interface data
+     *  @return           Socket Data structure
+     */
+    SocketData* get_iface_socket(Iface* iface);
+    
+    /**
+     *  Checks if incoming IP packet is intended for self.
+     *
+     *  @param ip       IP Address of intended recipient.
+     *  @return         True or False.
+     */
+    bool is_intended_ip_destination(IPAddr ip);
+    
+
+    
+    ArpCache arp_;                      // Arp Cache
+    PendingQueue pq_;                   // Queue of old packets
+    
+    IfaceSocketVector ifaces_;          // Interface and Socket connection data
+    std::vector<Rtable*> routes_;       // Routing table information
+    std::vector<Host*> hosts_;          // All active stations and routers
+    
+    bool is_router_;
     Log debug;
 };
 

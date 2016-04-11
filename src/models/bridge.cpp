@@ -9,6 +9,7 @@
 #include <fstream>
 #include <string>
 #include <sstream>
+#include <iomanip>
 #include <unistd.h>
 #include <netinet/in.h>
 
@@ -23,7 +24,7 @@
     @param debug_on Flag to set debug settings
 */
 Bridge::Bridge(const char *lan_name, int num_ports) :
-    ARP_TIME(20000),
+    ARP_TIME(10000),
     NUM_PORTS_(num_ports),
     curr_ports_(0),
     lan_name_(lan_name),
@@ -61,17 +62,15 @@ void Bridge::create_symlink() {
     std::ostringstream fname;           // Format file name
     
     // Format file name
-    fname << "./tmp/" << lan_name_ << ".txt";
+    fname << "./tmp/" << lan_name_;
     
     out.open(fname.str().c_str());
     
     if (!out) {
-        std::ostringstream ss2;
-        ss2 << "Failed to open " << fname.str().c_str() << ".";
-        if (debug.get_on())
-            debug.print(ss2.str());
-        
-        my_error(ss2.str());
+        debug.get_oss() << "Failed to open " << fname.str().c_str() << ".";
+        debug.print();
+        my_error(debug.get_oss().str());
+        my_error(debug.get_oss().str());
     }
     
     // Write to file
@@ -79,14 +78,11 @@ void Bridge::create_symlink() {
     
     // Create symlink to file
     my_symlink(fname.str().c_str(), lan_name_.c_str());
-    
-    if (debug.get_on()) {
-        std::ostringstream out;
-        out << "Created symlink " << lan_name_ << " to file "
-            << fname.str() << std::endl
-            << "Contents: " << content.str();
-        debug.print(out.str());
-    }
+
+
+    debug.get_oss() << "Created symlink " << lan_name_ << " to file "
+                    << fname.str() << std::endl << "\t- Contents: " << content.str();
+    debug.print();
 }
 
 /**
@@ -103,12 +99,9 @@ void Bridge::setup_server_info() {
     char temp_host[100];
     my_gethostname(temp_host, sizeof(temp_host));
     info_ = gethostbyname(temp_host);
-    
-    if (debug.get_on()) {
-        std::ostringstream out;
-        out << "Configured server on: " << info_->h_name;
-        debug.print(out.str());
-    }
+
+    debug.get_oss() << "Configured server on: " << info_->h_name;
+    debug.print();
 }
 
 /**
@@ -125,12 +118,9 @@ void Bridge::setup_socket() {
     socklen_t len = sizeof(sin);
     WSocket::wgetsockname(listen_fd_, (struct sockaddr*)&sin, &len);
     port_ = (unsigned short)ntohs(sin.sin_port);
-    
-    if (debug.get_on()) {
-        std::ostringstream out;
-        out << "Created socket: " << listen_fd_ << " on port: " << port_;
-        debug.print(out.str());
-    }
+
+    debug.get_oss() << "Created socket: " << listen_fd_ << " on port: " << port_;
+    debug.print();
 }
 
 /**
@@ -165,25 +155,7 @@ ClientData Bridge::package_client_data(int cli_fd, struct sockaddr_in cli_addr) 
     getaddrinfo(inet_ntoa(cli_addr.sin_addr),0,0,&res);
     getnameinfo(res->ai_addr,res->ai_addrlen,host,100,0,0,0);
     
-    // TODO: Parse message and retrieve sender device type.
-    
     return ClientData(type, cli_fd, host, ntohs(cli_addr.sin_port));
-}
-
-/**
- *  Checks bridge table for associated station/router.
- *
- *  @param port         Incoming station port
- *  @return             True if contains, else false
- */
-bool Bridge::has_port(Port port) {
-    bool result = false;
-    BridgeTableItr itr = btable_.find(port);
-    
-    if (itr != btable_.end())
-        result = true;
-    
-    return result;
 }
 
 /**
@@ -199,28 +171,37 @@ void Bridge::add_port(Port port) {
  *  Checks bridge table for associated station/router.
  *
  *  @param port         Incoming station port
- *  @param station      Incoming station name
- *  @return             True if contains, else false
+ *  @param mac          Incoming MAC address
+ *  @return             FD to send to, -1 if ARP entry not found
  */
-bool Bridge::has_station(Port port, std::string station) {
-//    for (BridgeTableItr itr = btable_.begin(); itr != btable_.end(); ++itr) {
-//        if (itr->first == port) {
-//            for (BridgeTableValuesItr itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
-//                if (itr2->second == station) {
-//                    return true;
-//                }
-//            }
-//        }
-//    }
+int Bridge::has_arp_entry(Port port, MacAddr mac) {
+    int result = -1;
     
-    bool result = false;
-    BridgeTableItr itr = btable_.find(port);
-    if (itr != btable_.end()) {
-        result = true;
+    // Search through entire ARP cache
+    if (port < 0) {
+        for (BridgeTableItr itr = btable_.begin(); itr != btable_.end(); ++itr) {
+            for (BridgeTableValuesItr itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
+                if (mac.compare(itr2->first) == 0) {
+                    result = itr->first;
+                    break;
+                }
+            }
+            if (result) break;
+        }
+
+        if (result != -1)
+            debug.get_oss() << "ARP cache contains MAC Address: " << mac;
+        else
+            debug.get_oss() << "ARP Table does not contain MAC Address: " << mac;
+        
+        debug.print();
     } else {
-        BridgeTableValuesItr itr2 = itr->second.find(station);
-        if (itr2 != itr->second.end())
-            result = true;
+        BridgeTableItr itr = btable_.find(port);
+        if (itr != btable_.end()) {
+            BridgeTableValuesItr itr2 = itr->second.find(mac);
+            if (itr2 != itr->second.end())
+                result = 1;
+        }
     }
     
     return result;
@@ -233,18 +214,15 @@ bool Bridge::has_station(Port port, std::string station) {
  *  @param port         Incoming station port
  *  @param mac          Incoming station MAC address
  */
-void Bridge::add_station(Port port, std::string station, MacAddr mac) {
-//    for (BridgeTableItr itr = btable_.begin(); itr != btable_.end(); ++itr) {
-//        if (itr->first == port) {
-//            itr->second.insert(std::pair<std::string, MacAddr>(station, mac));
-//        }
-//    }
-    
-    ArpEntry *entry = new ArpEntry(station, mac, std::chrono::duration_cast< milliseconds >
-                                   (std::chrono::system_clock::now().time_since_epoch()));
-    
+void Bridge::add_arp_entry(Port port, MacAddr mac) {
+    milliseconds time =  std::chrono::duration_cast< milliseconds >
+                            (std::chrono::system_clock::now().time_since_epoch());
     BridgeTableItr itr = btable_.find(port);
-    itr->second.insert(std::pair<std::string, ArpEntry*>(station, entry));
+    itr->second.insert(std::pair<MacAddr, milliseconds>(mac, time));
+
+    
+    debug.get_oss() << "Adding MAC address: " << mac << " on port: " << port_;
+    debug.print();
 }
 
 /**
@@ -257,10 +235,27 @@ void Bridge::monitor_arp_cache() {
     
     for (BridgeTableItr itr = btable_.begin(); itr != btable_.end(); ++itr) {
         for (BridgeTableValuesItr itr2 = itr->second.begin(); itr2 != itr->second.end();) {
-            if ((time - itr2->second->init_time_) > ARP_TIME)
+            if ((time.count() - itr2->second.count()) > ARP_TIME.count()) {
+                debug.get_oss() << "MAC Address: " << itr2->first << " timed out. Erasing... ";
+                debug.print();
+                
                 itr->second.erase(itr2++);
-            else
+            } else {
                 ++itr2;
+            }
+        }
+    }
+}
+
+/**
+ *  Outputs the contents of the self-learning table;
+ */
+void Bridge::print_btable() {
+    std::cout << "Showing Bridge Table" << std::endl;
+    std::cout << std::left << std::setw(11) << "Port" << "MAC Address" << std::endl;
+    for (auto p: btable_) {
+        for (auto m: p.second) {
+            std::cout << std::left << std::setw(8) << p.first << m.first << std::endl;
         }
     }
 }
@@ -278,19 +273,18 @@ void Bridge::start() {
     struct sockaddr_in cli_addr;
     unsigned int client_size = sizeof(cli_addr);
     int max_fd = listen_fd_;
+    int nhop_fd;                                    // Next hop File descriptor
+    EtherPkt pkt;
     
     FD_ZERO(&all_set);
     FD_SET(STDIN_FILENO, &all_set);
     FD_SET(listen_fd_, &all_set);
+
+    debug.get_oss() << lan_name_ << ": started server on '" << info_->h_name
+                    << "'' at '" << port_ << "'";
+    debug.print();
     
-    if (debug.get_on()) {
-        std::ostringstream out;
-        out << lan_name_ << ": started server on '" << info_->h_name
-            << "'' at '" << port_ << "'" << std::endl;
-        debug.print(out.str());
-    }
-    
-    while(1 && !stop) {
+    while(!stop) {
         // Block until input is receieved
         read_set = all_set;
         
@@ -315,34 +309,24 @@ void Bridge::start() {
                     if (cli_fd > max_fd)
                         max_fd = cli_fd;
                     
-                    
-                    if (debug.get_on()) {
-                        std::ostringstream out;
-                        out << lan_name_ << ": connect from '" << clients_.back().host_
-                        << "' at '" << ntohs(cli_addr.sin_port);
-                        debug.print(out.str());
-                    }
+                    debug.get_oss() << lan_name_ << ": connect from '" << clients_.back().ip_
+                                    << "' at '" << ntohs(cli_addr.sin_port);
+                    debug.print();
                     
                     ++curr_ports_;
                     
                     // If num_ports is at capacity, send Reject msg to client and close conn.
                     if (curr_ports_ > NUM_PORTS_) {
-                        if (debug.get_on()) {
-                            std::ostringstream out;
-                            out << "Rejected connection.";
-                            debug.print(out.str());
-                        }
-                        
-                        my_write(clients_.back().fd_, "Rejected", sizeof("Rejected"));
+                        debug.get_oss() << "Rejected connection.";
+                        debug.print();
+
+                        my_write(cli_fd, "Rejected", sizeof("Rejected"));
                         remove_client(clients_.back(), (int)(clients_.size() - 1), all_set);
                     } else {
-                        if (debug.get_on()) {
-                            std::ostringstream out;
-                            out << "Accpeted connection.";
-                            debug.print(out.str());
-                        }
-    
-                        my_write(clients_.back().fd_, "Accepted", sizeof("Accepted"));
+                        debug.get_oss() << "Accpeted connection.";
+                        debug.print();
+                        
+                        my_write(cli_fd, "Accepted", sizeof("Accepted"));
                         
                         // Add port mapping to arp cache
                         add_port(cli_fd);
@@ -356,39 +340,59 @@ void Bridge::start() {
                         debug.set_on(!debug.get_on());
                     } else if (strncmp(msg, "off", sizeof(char)*3) == 0){
                         stop = true;
+                    } else if (strncmp(msg, "show sl", sizeof(char)*7) == 0) {
+                        print_btable();
                     }
                 }
+                // Clear buffer
+                memset(msg, '\0', sizeof(char) * MAX_LINE);
             } else {
-                // TODO!!
-                // Incoming data frame packets
+                // Incoming ether frame packets
                 for (unsigned int i = 0; i < clients_.size(); ++i) {
                     if (FD_ISSET(clients_[i].fd_, &read_set)) {
-                        if ((msg_size = my_read(clients_[i].fd_, msg, MAX_LINE)) > 0) {
+                        if (read(clients_[i].fd_, &pkt, sizeof(EtherPkt)) > 0) {
+                            debug.get_oss() << "Received Ether Pkt";  debug.print(); EtherPkt::print(pkt);
                             // Check if dest MAC address is known
-                            
-                            // Check if src MAC address is known
-//                            if (has_station(clients_[i].fd_, STATION_NAME) == false)
-//                                add_station(clients_[i].fd_, STATION_NAME, SRC_MAC_ADDR);
-
-
-                            
-                        } else {
-                            if (debug.get_on()) {
-                                std::ostringstream out;
-                                out << lan_name_ << ": disconnect from '"
-                                      << clients_[i].host_ << "(" << ntohs(clients_[i].port_)
-                                      << ")'\n";
-                                debug.print(out.str());
+                            if ((nhop_fd = has_arp_entry(-1, pkt.mac_dst)) < 0) {
+                                // Flood to all connected stations
+                                for (unsigned int j = 0; j < clients_.size(); ++j) {
+                                    if (i != j) {
+                                        debug.get_oss() << "Destination MAC not known - Flooding to : "
+                                                        << clients_[j].ip_;
+                                        debug.print();
+                                        
+                                        if (write(clients_[j].fd_, &pkt, sizeof(pkt)) < 0)
+                                            my_error("Bridge: sending packet to next hop.");
+                                    }
+                                }
+                            } else {
+                                debug.get_oss() << "Destination MAC known - sending to " << pkt.mac_dst;
+                                debug.print();
+                                //  Send to next hop
+                                if (write(nhop_fd, &pkt, sizeof(pkt)) < 0)
+                                    my_error("Bridge: sending packet to next hop.");
                             }
+                            
+                            debug.get_oss() << "Searching Bridge Table for SRC MAC.";
+                            debug.print();
+                            // Check if src MAC address is known
+                            if (has_arp_entry(clients_[i].fd_, pkt.mac_src) < 0)
+                                add_arp_entry(clients_[i].fd_, pkt.mac_src);
+                        } else {
+                            debug.get_oss()<< lan_name_ << ": disconnect from '"
+                                << clients_[i].ip_ << "(" << ntohs(clients_[i].port_) << ")'";
+                            debug.print();
+
                             remove_client(clients_[i], i, all_set);
                         }
                         break;
                     }
                 }
+                
+                memset(&pkt, 0, sizeof(EtherPkt));
             }
             
-            // Clear buffer
-            memset(msg, '\0', sizeof(char) * MAX_LINE);
+            
         }
     }
 

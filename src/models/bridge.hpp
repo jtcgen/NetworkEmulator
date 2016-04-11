@@ -24,22 +24,8 @@
 #include "ether.hpp"
 
 typedef std::chrono::milliseconds milliseconds;
-
-typedef struct arp_entry {
-    arp_entry(std::string name,
-             MacAddr mac,
-             std::chrono::milliseconds t) :
-    name_(name),
-    mac_(mac),
-    init_time_(t) { }
-    
-    std::string name_;                       // Name of station
-    MacAddr mac_;                            // MAC address
-    std::chrono::milliseconds init_time_;    // Time of entry in milli seconds
-} ArpEntry;
-
-typedef std::map<std::string, ArpEntry*> BridgeTableValues;        // Key: Station name, Value: MAC Address
-typedef std::map<std::string, ArpEntry*>::iterator BridgeTableValuesItr;
+typedef std::map<MacAddr, milliseconds> BridgeTableValues;
+typedef std::map<MacAddr, milliseconds>::iterator BridgeTableValuesItr;
 typedef std::map<Port, BridgeTableValues > BridgeTable;
 typedef std::map<Port, BridgeTableValues >::iterator BridgeTableItr;
 
@@ -63,14 +49,6 @@ private:
     void monitor_arp_cache();
     
     /**
-     *  Checks bridge table for associated station/router.
-     *
-     *  @param port         Incoming station port
-     *  @return             True if contains, else false
-     */
-    bool has_port(Port port);
-    
-    /**
      *  Adds incoming port and MAC address to bridge table.
      *
      *  @param port         Incoming station port
@@ -81,10 +59,10 @@ private:
      *  Checks bridge table for associated station/router.
      *
      *  @param port         Incoming station port
-     *  @param station      Incoming station name
+     *  @param mac          Incoming MAC address
      *  @return             True if contains, else false
      */
-    bool has_station(Port port, std::string station);
+    int has_arp_entry(Port port, MacAddr mac);
     
     /**
      *  Adds incoming port and MAC address to bridge table.
@@ -93,7 +71,7 @@ private:
      *  @param station      Incoming station name
      *  @param mac          Incoming station MAC address
      */
-    void add_station(Port port, std::string station, MacAddr mac);
+    void add_arp_entry(Port port, MacAddr mac);
     
     /**
      *  Collects requested client address information.
@@ -121,7 +99,21 @@ private:
      *  so that others (stations/routers) can connect to it.
      */
     void create_symlink();
+
+    /**
+     Client disconnected, removes infor from client vector.
+     
+     @param cli ClientData object.
+     @param index Location in vector.
+     @param all_set
+     @return none
+     */
     void remove_client(ClientData cli, int index, fd_set &all_set);
+    
+    /**
+     *  Outputs the contents of the self-learning table;
+     */
+    void print_btable();
     
     /*  CLIENT DATA     */
     const milliseconds ARP_TIME;            // Allowed period of inactivity
@@ -137,7 +129,7 @@ private:
     unsigned int listen_fd_;                // Actively listening on listen socket
     
     // TODO: might have to be a key: port, value: <key=station,value=MAC_ADDR>
-    BridgeTable btable_;       // Bridge table for self-learning
+    BridgeTable btable_;                    // Bridge table for self-learning
     
     Log debug;
 };

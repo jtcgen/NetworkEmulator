@@ -11,8 +11,16 @@
 
 #include <string.h>
 #include <string>
+#include <list>
+#include <chrono>
 #include <map>
-#include "ether.hpp"
+
+/* ETHER PKT */
+#define PEER_CLOSED 2
+#define TYPE_IP_PKT 1
+#define TYPE_ARP_PKT 0
+
+typedef std::string MacAddr;
 
 /* ARP packet types */
 #define ARP_REQUEST 0
@@ -24,7 +32,7 @@
 #define PROT_TYPE_OSPF 2
 
 typedef std::string IPAddr;
-typedef short Port;
+typedef int Port;
 
 /* Structure to represent an interface */
 
@@ -45,19 +53,11 @@ typedef struct itface2link {
 /* Structure for a routing table entry */
 
 typedef struct rtable {
-    IPAddr dest_addr;               // Destination network address
+    IPAddr dest_addr;               // Destination network prefix address
     IPAddr next_hop;                // Next-hop router address
     IPAddr net_mask;                // Network mask
-    char iface_name[32];
+    std::string iface_name;
 } Rtable;
-
-
-///* Structure for an ARP cache entry */
-//
-//typedef struct arpcache {
-//    IPAddr ip_addr;
-//    MacAddr mac_addr;
-//} Arpc;
 
 /*--------------------------------------------------------------------*/
 
@@ -68,12 +68,82 @@ typedef struct rtable {
 /*--------------------------------------------------------------------*/
 /* Structure for ARP packets */
 
-/*Map of ARP cache, used to maintain current cache*/
-typedef std::map<IPAddr, MacAddr> ArpMap;
+typedef std::chrono::milliseconds milliseconds;
+
+typedef struct CacheContent {
+    CacheContent(MacAddr m, milliseconds t) : mac(m), time(t) { }
+    MacAddr mac;
+    milliseconds time;
+} CacheContent;
+
+typedef std::map<IPAddr, CacheContent> ArpCacheMap;
+typedef std::map<IPAddr, CacheContent>::iterator ArpCacheMapItr;
+
+class ArpCache {
+public:
+    
+    /*                                                                 */
+    /*  ARP cache, used to maintain current active IP/MAC connections. */
+    /*                                                                 */
+    
+    ArpCache() : MAX_TIME(10000) { }
+    
+    /*
+     *  Searches ARP cache for IP address.
+     *
+     *  @return result              IP address existence
+     */
+    bool has_mapping(IPAddr ip);
+    
+    /*
+     *  Adds IP/MAC pair to ARP cache.
+     *
+     *  @param ip                   IP address
+     *  @param mac                  MAC address
+     */
+    void add_mapping(IPAddr ip, MacAddr mac);
+    
+    /**
+     *  Checks for inactive station in ARP cache.
+     */
+    void monitor_cache();
+    
+    //      Accessors       //
+
+    /**
+     *  Retrieves the corresponding MAC address.
+     *
+     *  @param ip                   IP Address
+     *  @return                     Corresponding MAC address
+     */
+    MacAddr get_mac_for(IPAddr ip);
+    
+    /*
+     *  Returns iterator to first element of ArpCache.
+     *
+     *  @return result              Iterator to first element
+     */
+    ArpCacheMapItr begin();
+    
+    /*
+     *  Returns iterator to the last element of ArpCache.
+     *
+     *  @return result              Iterator to last element
+     */
+    ArpCacheMapItr end();
+    
+private:
+    const milliseconds MAX_TIME;
+    ArpCacheMap cache_;
+    
+};
 
 /*ARP packet format*/
 typedef struct arp_pkt
 {
+    static struct arp_pkt create_req_pkt(Iface i, IPAddr dst_ip);
+    static struct arp_pkt create_resp_pkt(struct arp_pkt pkt, IPAddr src_ip, MacAddr src_mac);
+    
     short op; /* op =0 : ARP request; op = 1 : ARP response */
     IPAddr src_ip;
     MacAddr src_mac;
@@ -84,32 +154,59 @@ typedef struct arp_pkt
 /*IP packet format*/
 typedef struct ip_pkt
 {
+    static struct ip_pkt create_pkt(IPAddr src_ip, IPAddr dst_ip, std::string data);
+    
     IPAddr  dst_ip;
     IPAddr  src_ip;
-    short   protocol;
-    unsigned long    sequenceno;
-    short   length;
+//    short   protocol;
+//    unsigned long    sequenceno;
     std::string data;
 } IpPkt;
 
-/*queue for ip packet that has not yet sent out*/
-typedef struct p_queue
+/* structure of an ethernet pkt */
+typedef struct __etherpkt
 {
+    __etherpkt() { }
+    __etherpkt(MacAddr mac_src) { this->mac_src = mac_src; }
+    
+    static void print(struct __etherpkt &pkt);
+    
+    /* destination address in net order */
+    MacAddr mac_dst;
+    
+    /* source address in net order */
+    MacAddr mac_src;
+    
+    /************************************/
+    /* payload type in host order       */
+    /* type = 0 : ARP frame             */
+    /* type = 1 : IP  frame             */
+    /************************************/
+    short  type;
+    
+    /* size of the data in host order */
+    short   size;
+    
+    ArpPkt arp_pkt;
+    IpPkt ip_pkt;
+    
+} EtherPkt;
+
+
+/*queue for ip packet that has not yet sent out*/
+typedef struct pending_pkt {
     IPAddr next_hop_ipaddr;
     IPAddr dst_ipaddr;
-    char *pending_pkt;
-    struct p_queue *next;
-    
-} PendingQueue;
+    IPAddr src_ipaddr;
+    std::string iface_name;
+    std::string data;
+} PendingPkt;
 
 /*queue to remember the packets we have received*/
-typedef struct packet_queue
-{
-    char *packet;
-    int  length;
-    short counter;
-    struct packet_queue *next;
-} OldPackets;
+typedef std::list<PendingPkt> PendingQueue;
+typedef std::list<PendingPkt>::iterator PendingQueueItr;
+
+
 
 /*-------------------------------------------------------------------- */
 
@@ -121,7 +218,7 @@ typedef struct host
 {
     std::string name;
     IPAddr addr;
-    Port port;
+//    Port port;
 } Host;
 
 typedef struct lan_rout {
@@ -168,5 +265,6 @@ public:
     
     static int ROUTER;
 };
+
 
 #endif /* IP_HPP */

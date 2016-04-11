@@ -12,19 +12,22 @@
 
 int main(int argc, const char **argv) {
     
-    if (argc != 6)
-        my_error(" R/S INTERFACE ROUTE_TABLE HOST_NAME DEBUG");
+    if (argc != 5)
+        my_error(" R/S INTERFACE ROUTE_TABLE HOST_NAME");
+
+    bool is_router = false;
+    if (std::string(argv[1]).compare(std::string("-route")) == 0)
+        is_router = true;
+//    if (IP::host_exists(argv[1]) == true)
+//        my_error("Host already exists.");
+//    
+//    if (IP::add_host(argv[1]) == false)
+//        my_error("Exceed host capacity.");
     
-    if (IP::host_exists(argv[1]) == true)
-        my_error("Host already exists.");
+    Client *c = new Client(argv[2], argv[3], argv[4], is_router);
+    c->start();
     
-    if (IP::add_host(argv[1]) == false)
-        my_error("Exceed host capacity.");
-    
-//    int ports = (int)atoi(argv[2]);
-//    bool debug = (bool)atoi(argv[3]);
-    
-    
+    delete c;
     
     return 0;
 }

@@ -7,8 +7,8 @@ BIN_STATION := station
 CC := g++
 
 # Additional compiler flags 
-CFLAGS := -Wall -g -c 
-LFLAGS := -Wall -g 
+CFLAGS := -Wall -g -c -std=c++11
+LFLAGS := -Wall -g -std=c++11
 
 # Include paths
 INCLUDES := -I./common/ -I./models/
@@ -24,7 +24,7 @@ COMMON_SRC := $(shell find ./common -name "*.cpp" -print)
 # TODO: Might have to include clientdata.hpp
 BRIDGE_SRC := $(shell find . -name 'main_bridge.cpp' -o -name 'bridge.cpp' -o -name 'ip.cpp') $(COMMON_SRC)
 # TODO: Add router.cpp
-STATION_SRC := $(shell find . -name 'main_station.cpp' -o -name 'client.cpp' -o -name 'station.cpp' -o -name 'ip.cpp') $(COMMON_SRC)
+STATION_SRC := $(shell find . -name 'main_station.cpp' -o -name 'client.cpp' -o -name 'ip.cpp') $(COMMON_SRC)
 
 # Set object file names
 B_OBJ := $(BRIDGE_SRC:%.cpp=%.o) 
@@ -49,6 +49,7 @@ $(BIN_STATION): $(S_OBJ)
 .PHONY: clean
 clean: 
 	find . -type f -name '*.o' -exec rm {} +
+	rm cs*
 
 realclean: clean
 	rm $(BIN_BRIDGE) $(BIN_STATION)

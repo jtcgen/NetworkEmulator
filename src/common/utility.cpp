@@ -12,8 +12,36 @@
 #include <cerrno>
 
 #include "utility.hpp"
-#include "ip.hpp"
 
+
+/******************************************************************/
+/*                          LOG                                   */
+/******************************************************************/
+
+std::ostringstream& Log::get_oss() {
+    oss_.str(std::string(""));
+    oss_.clear();
+    return oss_;
+}
+
+/**
+ *  Outputs to stdout contents of oss.
+ *
+ */
+void Log::print() {
+    if (on_) {
+        std::cout << "Logging - " << type_ << ": " << oss_.str() << std::endl;
+        clear();
+    }
+}
+
+/**
+ *  Clears out out stringstream object.
+ */
+void Log::clear() {
+    oss_.str("");
+    oss_.clear();
+}
 
 /**
  *  error wrapper function
@@ -26,23 +54,6 @@ void my_error(std::string msg) {
     else
         std::cerr << msg << std::endl;
     exit(EXIT_FAILURE);
-}
-
-/**
- *  logging function
- *
- *  @param msg      Message to be logged.
- */
-void Log::print(std::string msg) {
-    std::cout << "Logging - " << type_ << ": " << msg << std::endl;
-}
-
-/**
- *  Clears out out stringstream object.
- */
-void Log::clear() {
-    out_.str("");
-    out_.clear();
 }
 
 /**
@@ -173,6 +184,21 @@ int my_close(int fd) {
 void my_symlink(const char *path1, const char *path2) {
     if (symlink(path1, path2) == -1)
         my_error("Error: could not create symlink.");
+}
+
+/**
+ *  readlink wrapper
+ *
+ *  @param path         Filename path
+ *  @param buf          Contents of the symbolic link
+ *  @param bufsiz       Size of the buffer
+ *  @return             Number of bytes placed in buf
+ */
+ssize_t my_readlink(const char *path, char *buf, size_t bufsiz) {
+    ssize_t n;
+    if ((n = readlink(path, buf, bufsiz)) == -1)
+        my_error("Error: could not read symlink.");
+    return n;
 }
 
 
