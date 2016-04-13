@@ -18,16 +18,11 @@ int main(int argc, const char **argv) {
     bool is_router = false;
     if (std::string(argv[1]).compare(std::string("-route")) == 0)
         is_router = true;
-//    if (IP::host_exists(argv[1]) == true)
-//        my_error("Host already exists.");
-//    
-//    if (IP::add_host(argv[1]) == false)
-//        my_error("Exceed host capacity.");
     
-    Station *c = new Station(argv[2], argv[3], argv[4], is_router);
-    c->start();
+    Station *s = new Station(argv[2], argv[3], argv[4], is_router);
+    s->start();
     
-    delete c;
+    delete s;
     
     return 0;
 }
