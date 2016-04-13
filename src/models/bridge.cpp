@@ -34,6 +34,12 @@ Bridge::Bridge(const char *lan_name, int num_ports) :
     setup_server_info();
     setup_socket();
     create_symlink();
+        
+        if (!btable_.empty())
+            for (auto p : btable_) {
+                memset(&p.second, 0, sizeof(p.second));
+                memset(&btable_, 0, sizeof(btable_));
+        }
 }
 
 /**
@@ -95,11 +101,10 @@ void Bridge::setup_server_info() {
     addr_.sin_addr.s_addr = htonl(INADDR_ANY);
     addr_.sin_family = AF_INET;
     addr_.sin_port = htons((short)0);      // Bind to random available port
-    
     char temp_host[100];
     my_gethostname(temp_host, sizeof(temp_host));
+    std::cout << temp_host << std::endl;
     info_ = gethostbyname(temp_host);
-
     debug.get_oss() << "Configured server on: " << info_->h_name;
     debug.print();
 }
@@ -167,6 +172,16 @@ void Bridge::add_port(Port port) {
     btable_.insert(std::pair<Port, BridgeTableValues>(port, BridgeTableValues()));
 }
 
+int Bridge::has_arp_entry(MacAddr mac) {
+    int result = -1;
+    for (auto c : clients_) {
+        result = has_arp_entry(c.fd_, mac);
+        if (result != -1)
+            return result;
+    }
+    return result;
+}
+
 /**
  *  Checks bridge table for associated station/router.
  *
@@ -178,31 +193,19 @@ int Bridge::has_arp_entry(Port port, MacAddr mac) {
     int result = -1;
     
     // Search through entire ARP cache
-    if (port < 0) {
-        for (BridgeTableItr itr = btable_.begin(); itr != btable_.end(); ++itr) {
-            for (BridgeTableValuesItr itr2 = itr->second.begin(); itr2 != itr->second.end(); ++itr2) {
-                if (mac.compare(itr2->first) == 0) {
-                    result = itr->first;
-                    break;
-                }
-            }
-            if (result) break;
-        }
-
-        if (result != -1)
-            debug.get_oss() << "ARP cache contains MAC Address: " << mac;
-        else
-            debug.get_oss() << "ARP Table does not contain MAC Address: " << mac;
-        
-        debug.print();
-    } else {
-        BridgeTableItr itr = btable_.find(port);
-        if (itr != btable_.end()) {
-            BridgeTableValuesItr itr2 = itr->second.find(mac);
-            if (itr2 != itr->second.end())
-                result = 1;
-        }
+    BridgeTableItr itr = btable_.find(port);
+    if (itr != btable_.end()) {
+        BridgeTableValuesItr itr2 = itr->second.find(mac);
+        if (itr2 != itr->second.end())
+            result = port;
     }
+    
+    if (result != -1)
+        debug.get_oss() << "ARP cache contains MAC Address: " << mac;
+    else
+        debug.get_oss() << "ARP Table does not contain MAC Address: " << mac;
+    
+    debug.print();
     
     return result;
 }
@@ -353,7 +356,7 @@ void Bridge::start() {
                         if (read(clients_[i].fd_, &pkt, sizeof(EtherPkt)) > 0) {
                             debug.get_oss() << "Received Ether Pkt";  debug.print(); EtherPkt::print(pkt);
                             // Check if dest MAC address is known
-                            if ((nhop_fd = has_arp_entry(-1, pkt.mac_dst)) < 0) {
+                            if ((nhop_fd = has_arp_entry(pkt.mac_dst)) < 0) {
                                 // Flood to all connected stations
                                 for (unsigned int j = 0; j < clients_.size(); ++j) {
                                     if (i != j) {
@@ -365,9 +368,14 @@ void Bridge::start() {
                                             my_error("Bridge: sending packet to next hop.");
                                     }
                                 }
+                                if (pkt.mac_dst.compare("") != 0) {
+                                    std::cout << "mac_dst not empty";
+                                    add_arp_entry(clients_[i].fd_, pkt.mac_dst);
+                                }
                             } else {
-                                debug.get_oss() << "Destination MAC known - sending to " << pkt.mac_dst;
+                                debug.get_oss() << "Destination MAC known - sending to " << pkt.mac_dst << " thru " << nhop_fd;
                                 debug.print();
+                                EtherPkt::print(pkt);
                                 //  Send to next hop
                                 if (write(nhop_fd, &pkt, sizeof(pkt)) < 0)
                                     my_error("Bridge: sending packet to next hop.");

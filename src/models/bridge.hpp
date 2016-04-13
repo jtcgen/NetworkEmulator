@@ -21,7 +21,6 @@
 #include "utility.hpp"
 #include "clientdata.hpp"
 #include "ip.hpp"
-#include "ether.hpp"
 
 typedef std::chrono::milliseconds milliseconds;
 typedef std::map<MacAddr, milliseconds> BridgeTableValues;
@@ -63,6 +62,8 @@ private:
      *  @return             True if contains, else false
      */
     int has_arp_entry(Port port, MacAddr mac);
+    
+    int has_arp_entry(MacAddr mac);
     
     /**
      *  Adds incoming port and MAC address to bridge table.

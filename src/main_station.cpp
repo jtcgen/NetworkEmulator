@@ -8,7 +8,7 @@
 
 #include <iostream>
 
-#include "client.hpp"
+#include "station.hpp"
 
 int main(int argc, const char **argv) {
     
@@ -24,7 +24,7 @@ int main(int argc, const char **argv) {
 //    if (IP::add_host(argv[1]) == false)
 //        my_error("Exceed host capacity.");
     
-    Client *c = new Client(argv[2], argv[3], argv[4], is_router);
+    Station *c = new Station(argv[2], argv[3], argv[4], is_router);
     c->start();
     
     delete c;

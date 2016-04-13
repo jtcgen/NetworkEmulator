@@ -24,15 +24,11 @@ COMMON_SRC := $(shell find ./common -name "*.cpp" -print)
 # TODO: Might have to include clientdata.hpp
 BRIDGE_SRC := $(shell find . -name 'main_bridge.cpp' -o -name 'bridge.cpp' -o -name 'ip.cpp') $(COMMON_SRC)
 # TODO: Add router.cpp
-STATION_SRC := $(shell find . -name 'main_station.cpp' -o -name 'client.cpp' -o -name 'ip.cpp') $(COMMON_SRC)
+STATION_SRC := $(shell find . -name 'main_station.cpp' -o -name 'station.cpp' -o -name 'ip.cpp') $(COMMON_SRC)
 
 # Set object file names
 B_OBJ := $(BRIDGE_SRC:%.cpp=%.o) 
 S_OBJ := $(STATION_SRC:%.cpp=%.o)
-
-#SRC := $(shell find . -name '*.cpp')
-#OBJ := $(SRC:%.cpp=%.o)
-
 
 ### COMPILATION RULES
 all: $(BIN_BRIDGE) $(BIN_STATION)
