@@ -4,20 +4,49 @@
 # CNT 5505 Network Emulator
 # Spring 2016 Computer Science, FSU
 #####################################################
-1. Compiled on Linux machine. 
 
-2. Commands you can run in stations/hosts
+1. How to compile the code
 
-   debug <on|off> // turn on or off debugging
-   send <destination> <message> // send message to a destination host
-   sh host // show the IP/name mapping table
-   sh arp // show the ARP cache table information
+    platform: MAC OS X
+    just type "make"
 
-3. To start the emulation, run
 
-   run_emulation
+3. Commands supported in stations/routers/bridges
 
-   which emulates the following network topology
+   3.1 stations:
+
+	   send <destination> <message> // send message to a destination host
+	   show arp 		   // show the ARP cache table information
+	   show pq 		      // show the pending_queue
+	   show	host 		   // show the IP/name mapping table
+	   show	iface 		// show the interface information
+	   show	rtable 		// show the contents of routing table
+	   debug             // verbose output
+	   quit              // close the station
+
+   3.2 routers:
+
+	   show	arp 		   // show the ARP cache table information
+	   show	pq 		   // show the pending_queue
+	   show	host 		   // show the IP/name mapping table
+	   show	iface 		// show the interface information
+	   show	rtable 		// show the contents of routing table
+	   debug             // verbose output
+	   quit              // close the router
+
+
+   3.3 bridges:
+
+	   show sl 		      // show the contents of self-learning table
+	   debu              // verbose output
+	   quit              // close the bridge
+
+
+4. To start the emulation, run
+
+   	run_simulation
+
+   , which emulates the following network topology
 
    
           B              C                D
